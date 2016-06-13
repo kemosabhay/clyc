@@ -109,6 +109,10 @@ $clyc_installed = get_option('clyc_installed');
 							<p>
 								Можно проанализировать и сократить ссылки в существующих постах и страницах
 							</p>
+							<p>
+								(возможность появится в ближайшее время)
+							</p>
+
 						</td>
 					</tr>
 					<tr>
@@ -117,7 +121,7 @@ $clyc_installed = get_option('clyc_installed');
 							<?php if ($clyc_installed == 1): ?>
 								<!--Форма, содержащая единственную кнопку - очистки таблицы настроек плагина-->
 								<form method="post" action="">
-									<input type="submit" name="clyc_analyse_contents" value="Проанализировать существующий контент"/>
+									<input disabled type="submit" name="clyc_analyse_contents" value="Проанализировать существующий контент"/>
 								</form>
 							<?php endif; ?>
 						</td>

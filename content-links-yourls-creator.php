@@ -45,7 +45,7 @@ function clyc_install(){
 
 		//TODO  подумать о более изящном хранении настроек
 		$sql = "INSERT INTO $table (id, clyc_yourls_domain, clyc_yourls_token, clyc_create_on_fly, clyc_domains) VALUES('%s', '%s', '%s', '%s', '%s')";
-		$query = $wpdb->prepare($sql, 1, '', '', 0, 'yandex.ru, google.com');
+		$query = $wpdb->prepare($sql, 1, '', '', 0, '');
 		$result = $wpdb->query($query);
 		if($result === false){
 			//echo '<br>'.$query.'<br>';
