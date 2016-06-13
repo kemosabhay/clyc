@@ -38,7 +38,7 @@ $clyc_installed = get_option('clyc_installed');
 	<table>
 		<tr>
 			<td>
-				<form method="post" action="<? echo $_SERVER['REQUEST_URI'];?>">
+				<form method="post" action="">
 					<table>
 						<tr>
 							<td colspan="2"><h4>Общие настройки плагина</h4></td>
@@ -116,7 +116,7 @@ $clyc_installed = get_option('clyc_installed');
 							<!-- показываем доп настройки только после установки свойст YOURLS -->
 							<?php if ($clyc_installed == 1): ?>
 								<!--Форма, содержащая единственную кнопку - очистки таблицы настроек плагина-->
-								<form method="post" action="<? echo $_SERVER['REQUEST_URI'];?>">
+								<form method="post" action="">
 									<input type="submit" name="clyc_analyse_contents" value="Проанализировать существующий контент"/>
 								</form>
 							<?php endif; ?>
