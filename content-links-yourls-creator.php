@@ -10,8 +10,7 @@ Version: 0.1
 include_once('includes/models/clyc.php');
 define( 'CLYC_VERSION', '0.1' );
 define( 'CLYC_URL', plugin_dir_url( __FILE__ ) );
-//TODO разобраться с подключением стиля
-//wp_register_style( 'content-links-yourls-creator', CLYC_URL.'content-links-yourls-creator.css', array(), CLYC_VERSION ); // Add multi-select css.
+
 /**
  * Установка плагина
  */
@@ -19,7 +18,7 @@ function clyc_install(){
 	global $wpdb;
 	$table = clyc_get_table();
 
-	if($wpdb->get_var("SHOW TABLES LIKE $table") != $table){
+	if( $wpdb->get_var("SHOW TABLES LIKE $table") != $table ){
 		$sql = "CREATE TABLE IF NOT EXISTS `$table` (
 					`id` int(11) NOT NULL,
 					`clyc_yourls_domain` varchar(256) NULL,
@@ -42,10 +41,8 @@ function clyc_install(){
 		//	echo '<br>'.$query.'<br>';
 		//	die('ошибка заполения '.$table);
 		//}
-
-		//TODO  подумать о более изящном хранении настроек
 		$sql = "INSERT INTO $table (id, clyc_yourls_domain, clyc_yourls_token, clyc_create_on_fly, clyc_domains) VALUES('%s', '%s', '%s', '%s', '%s')";
-		$query = $wpdb->prepare($sql, 1, '', '', 0, '');
+		$query = $wpdb->prepare($sql, 1, '', '', 1, '');
 		$result = $wpdb->query($query);
 		if($result === false){
 			//echo '<br>'.$query.'<br>';
@@ -62,9 +59,9 @@ function clyc_install(){
 function clyc_uninstall(){
 	global $wpdb;
 	$table = clyc_get_table();
+
 	$sql = "DROP TABLE IF EXISTS $table";
 	$wpdb->query($sql);
-
 	delete_option('clyc_installed');
 }
 
@@ -77,7 +74,6 @@ function clyc_delete(){
 
 	$sql = "DROP TABLE IF EXISTS $table";
 	$wpdb->query($sql);
-
 	delete_option('clyc_installed');
 }
 
@@ -85,8 +81,32 @@ register_activation_hook(__FILE__, 'clyc_install');
 register_deactivation_hook(__FILE__, 'clyc_uninstall');
 register_uninstall_hook(__FILE__, 'clyc_delete');
 
+
 // подключаем обработку ссылок при сохранении контента на лету
 add_filter('content_save_pre', 'clyc_pre_analyse_content');
+
+add_action( 'admin_enqueue_scripts', array( $this, 'clyc_styles' ) ); // Enqueue scripts for admin page.
+
+/**
+ * Register style sheet.
+ */
+
+// load css into the admin pages
+function mytheme_enqueue_options_style() {
+	wp_enqueue_style( 'mytheme-options-style', get_template_directory_uri() . '/css/admin.css' );
+}
+add_action( 'admin_enqueue_scripts', 'mytheme_enqueue_options_style' );
+
+
+
+// load css into the admin pages
+function clyc_style() {
+	//wp_enqueue_style( 'clyc-bootstrap', CLYC_URL.'assets/css/bootstrap.css');
+	wp_enqueue_style( 'clyc-options-style', CLYC_URL.'assets/css/content-links-yourls-creator.css' );
+	wp_enqueue_script( 'clyc-jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js' );
+
+}
+add_action( 'admin_enqueue_scripts', 'clyc_style');
 
 
 /**
@@ -109,7 +129,7 @@ function clyc_pre_analyse_content($content){
  * Добавляем в меню пункт настроек
  */
 function clyc_admin_menu(){
-	add_menu_page('Настройки clYc', 'Настройки clYc', 8, __FILE__, 'clyc_editor', '/wp-content/plugins/content-links-yourls-creator/includes/assets/img/scissors-16.png'); // меню
+	add_menu_page('Настройки clYc', 'Настройки clYc', 8, __FILE__, 'clyc_editor', '/wp-content/plugins/content-links-yourls-creator/assets/img/scissors-16.png'); // меню
 }
 
 /**

@@ -48,6 +48,7 @@ function clyc_save_options($post){
 			// если получен ответ - сохраняем данные, меняем  свойство
 			if ( ! empty($data->shorturl)) {
 				update_option('clyc_installed', 1);
+				$post['clyc_create_on_fly'] = 1;
 			} else {
 				return  '<span class="error">Введены неправильные настройки YOURLS</span>';
 			}

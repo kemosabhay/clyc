@@ -1,0 +1,65 @@
+body{
+	background-color: transparent;
+	color: #444;
+	font-family: "Open Sans",sans-serif;
+	font-size: 13px;
+	line-height: 1.4em;
+}
+h2 .success,
+h3 .success{
+	color: green;
+}
+h2 .error,
+h3 .error{
+	color: firebrick;
+}
+.clyc_form_note{
+	display: inline-block;
+	font-size: 11px;
+	color: gray;
+}
+.clyc_domain_tag{
+	background: #fff none repeat scroll 0 0;
+	border: 1px solid #9C9D99;
+	border-radius: 8px;
+	display: inline-block;
+	margin: 2px;
+	padding: 3px 18px 3px 3px;
+	position: relative;
+	width: auto;
+}
+.clyc_domain_name{
+	display: inline-block;
+	color: #656664;
+}
+.clyc_domain_del{
+	background: rgba(0, 0, 0, 0) url("../img/close-16.png") repeat scroll 0 0;
+	height: 16px;
+	position: absolute;
+	right: 1px;
+	top: 5px;
+	width: 16px;
+	cursor: pointer;
+}
+.add_domain{
+	float: left;
+	margin: 0 0 -1px 0;
+	width: 200px;
+}
+#clyc_domain_container{
+	margin-top: 5px;
+}
+.add_domain_btn{
+	background: #fff url("../img/add-16.png") no-repeat scroll 5px 5px;
+	border: 1px solid #ddd;
+	cursor: pointer;
+	float: left;
+	height: 26px;
+	margin: 0 0 0 -1px;
+	width: 26px;
+}
+.clyc_domains_error{
+	color: firebrick;
+	margin: 2px;
+}
+.clear{clear: both;}

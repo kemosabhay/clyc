@@ -1,19 +1,6 @@
-<style>
-	h2 .success,
-	h3 .success{
-		color: green;
-	}
-	h2 .error,
-	h3 .error{
-		color: firebrick;
-	}
-	.clyc_form_note{
-		font-size: 11px;
-		color: gray;
-	}
-</style>
 <?php
 include_once('models/clyc.php');
+
 
 // обрабатываем сабмит формы
 $message = '';
@@ -27,8 +14,92 @@ if (!empty($_POST)) {
 
 // получаем настройки плагина
 $options = clyc_get_options();
+$clyc_domains = explode(',', $options['clyc_domains']);
 $clyc_installed = get_option('clyc_installed');
 ?>
+<script>
+	/**
+	 * проверяет ваидность домена
+	 * @param str
+	 * @returns {boolean}
+	 */
+	function isURL(str) {
+		var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+			'((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|'+ // domain name
+			'((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+			'(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+			'(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+			'(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+		return pattern.test(str);
+	}
+
+	/**
+	 * добавление нового домена в список
+	 */
+	function addDomain() {
+		var message = ''; // строка для хранения ошибок
+		$('.clyc_domains_error').remove();
+		// получаем домен
+		var domain = $('#add_domain').val();
+		if(isURL(domain)){
+			// очищаем от лишнего домен
+			$('#add_domain').val('');
+			domain = domain.toLowerCase();
+			domain = domain.replace("http://", "");
+			domain = domain.replace("https://", "");
+			domain = domain.replace("www.", "");
+			if (domain.slice(-1) == '/') {
+				domain = domain.substring(0,domain.length-1);
+			}
+
+			// проверяем нет ли этого домена уже в списке
+			var domains = $('#clyc_domains').val();
+			if (domains.indexOf(domain) != -1){
+				message = 'Даный домен уже присутствует в списке';
+			} else {
+				var html ='<div class="clyc_domain_tag"><div class="clyc_domain_name">'+domain+'</div><div class="clyc_domain_del"></div></div>';
+				$('#clyc_domain_container').append(html);
+				$('#clyc_domains').val(domains+','+domain);
+			}
+		} else {
+			message = 'Введённое значение должно быть кооректным URL';
+		}
+		if (message != ''){
+			$('.clyc_domains_td').prepend("<div class='clyc_domains_error'>"+message+"</div>");
+			return false;
+		}
+	}
+
+	$( document ).ready(function() {
+		/**
+		 * обработчики клика по плюсу и клавиши ENTER в в поле добавления домена
+		 */
+		$( "#add_domain_btn" ).on('click', function() {
+			addDomain();
+		});
+		$('#add_domain').on('keypress', function(e) {
+			var keyCode = e.keyCode || e.which;
+			if (keyCode === 13) {
+				e.preventDefault();
+				addDomain();
+				return false;
+			}
+		});
+
+		/**
+		 * Удаление домена из списка
+		 */
+		$(document).on('click', ".clyc_domain_del", function() {
+			var domain = $(this).siblings('.clyc_domain_name').html();
+			var domains = $('#clyc_domains').val();
+			domains = domains.replace(domain+',', "");
+			domains = domains.replace(','+domain, "");
+
+			$('#clyc_domains').val(domains);
+			$(this).parent('.clyc_domain_tag').remove();
+		});
+	});
+</script>
 <div class="wrap">
 	<h1>Content links YOURLS creator</h1>
 	<?php if ($clyc_installed == 0): ?>
@@ -37,9 +108,9 @@ $clyc_installed = get_option('clyc_installed');
 	<?=($message != '') ? "<h3>$message</h3>" : '';?>
 	<table>
 		<tr>
-			<td>
+			<td width="50%">
 				<form method="post" action="">
-					<table>
+					<table >
 						<tr>
 							<td colspan="2"><h4>Общие настройки плагина</h4></td>
 						</tr>
@@ -50,7 +121,7 @@ $clyc_installed = get_option('clyc_installed');
 							<td>
 								Домен YOURLS
 							</td>
-							<td>
+							<td width="60%">
 								<input name="clyc_yourls_domain" type="text" value="<?=$options['clyc_yourls_domain']?>">
 							</td>
 						</tr>
@@ -76,13 +147,31 @@ $clyc_installed = get_option('clyc_installed');
 								</td>
 							</tr>
 							<tr>
-								<td>
-									Список доменов:<div class="clyc_form_note">один или несколько, введённых через запятую</div>
-								</td>
-								<td>
-									<textarea name="clyc_domains" cols="50" rows="4"><?=$options['clyc_domains']?></textarea>
+								<td colspan="2">
+									&nbsp;
 								</td>
 							</tr>
+							<tr>
+								<td valign="top"  >
+									Список доменов:<div class="clyc_form_note">Добавляйте домены по одному</div>
+								</td>
+								<td valign="top" class="clyc_domains_td">
+									<input id="add_domain" class="add_domain" type="text" value=""><div id="add_domain_btn" class="add_domain_btn" ></div>
+									<div class="clear"></div>
+
+									<div id ='clyc_domain_container'>
+										<?php foreach ($clyc_domains as $domain) : ?>
+											<div class="clyc_domain_tag" data-id="<?=$domain?>">
+												<div class="clyc_domain_name"><?=$domain?></div>
+												<div class="clyc_domain_del"></div>
+											</div>
+										<?php endforeach;?>
+									</div>
+									<!--<textarea name="clyc_domains" cols="50" id="clyc_domains" rows="4">--><?//=$options['clyc_domains']?><!--</textarea>-->
+									<input name="clyc_domains" id="clyc_domains" type="hidden" value="<?=$options['clyc_domains']?>">
+								</td>
+							</tr>
+
 							<tr>
 								<td colspan="2"><hr></td>
 							</tr>
@@ -97,37 +186,37 @@ $clyc_installed = get_option('clyc_installed');
 			</td>
 			<td width="3%"></td>
 			<td valign="top">
-				<table>
-					<tr>
-						<td colspan="2"><h4>Преобразовать ссылки в существующем контенте</h4></td>
-					</tr>
-					<tr>
-						<td colspan="2"><hr></td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							<p>
-								Можно проанализировать и сократить ссылки в существующих постах и страницах
-							</p>
-							<p>
-								(возможность появится в ближайшее время)
-							</p>
+				<!-- показываем доп настройки только после установки свойст YOURLS -->
+				<?php if ($clyc_installed == 1): ?>
+					<table>
+						<tr>
+							<td colspan="2"><h4>Преобразовать ссылки в существующем контенте</h4></td>
+						</tr>
+						<tr>
+							<td colspan="2"><hr></td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<p>
+									Можно проанализировать и сократить ссылки в существующих постах и страницах
+								</p>
+								<p>
+									(возможность появится в ближайшее время)
+								</p>
 
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2" align="left">
-							<!-- показываем доп настройки только после установки свойст YOURLS -->
-							<?php if ($clyc_installed == 1): ?>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2" align="left">
 								<!--Форма, содержащая единственную кнопку - очистки таблицы настроек плагина-->
 								<form method="post" action="">
 									<input disabled type="submit" name="clyc_analyse_contents" value="Проанализировать существующий контент"/>
 								</form>
-							<?php endif; ?>
-						</td>
-					</tr>
 
-				</table>
+							</td>
+						</tr>
+					</table>
+				<?php endif; ?>
 			</td>
 		</tr>
 	</table>
