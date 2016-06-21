@@ -4,7 +4,8 @@ include_once('models/clyc.php');
 
 // обрабатываем сабмит формы
 $message = '';
-if (!empty($_POST)) {
+if ( ! empty($_POST)) {
+	//pp($_POST);
 	if (isset($_POST['clyc_save_options'])) {
 		$message = clyc_save_options($_POST);
 	} elseif(isset($_POST['clyc_analyse_contents'])) {
@@ -14,7 +15,8 @@ if (!empty($_POST)) {
 
 // получаем настройки плагина
 $options = clyc_get_options();
-$clyc_domains = explode(',', $options['clyc_domains']);
+
+$clyc_domains = ( ! empty($options['clyc_domains'])) ? explode(',', $options['clyc_domains']) : array();
 $clyc_installed = get_option('clyc_installed');
 ?>
 <script>
@@ -153,7 +155,7 @@ $clyc_installed = get_option('clyc_installed');
 							</tr>
 							<tr>
 								<td valign="top"  >
-									Список доменов:<div class="clyc_form_note">Добавляйте домены по одному</div>
+									Список доменов:<br><div class="clyc_form_note">Добавляйте домены по одному</div>
 								</td>
 								<td valign="top" class="clyc_domains_td">
 									<input id="add_domain" class="add_domain" type="text" value=""><div id="add_domain_btn" class="add_domain_btn" ></div>
@@ -184,6 +186,8 @@ $clyc_installed = get_option('clyc_installed');
 					</table>
 				</form>
 			</td>
+			<?/*
+			// TODO доработать этот функционал
 			<td width="3%"></td>
 			<td valign="top">
 				<!-- показываем доп настройки только после установки свойст YOURLS -->
@@ -218,6 +222,7 @@ $clyc_installed = get_option('clyc_installed');
 					</table>
 				<?php endif; ?>
 			</td>
+			*/?>
 		</tr>
 	</table>
 

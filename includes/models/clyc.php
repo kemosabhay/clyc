@@ -1,6 +1,16 @@
 <?php
 
 /**
+ * очищает строку от лишних символов в начале и конце
+ * используем при редактировании доменов
+ * @param $str
+ */
+function trim_string($str) {
+	$str = rtrim(rtrim($str), ",");
+	$str = trim(trim($str), ",");
+	return $str;
+}
+/**
  * дебажная функция для удобного вывода массива
  * @param $arr
  */
@@ -60,13 +70,17 @@ function clyc_save_options($post){
 	// сохраняем натсрйоки в БД
 	global $wpdb;
 	$table = clyc_get_table();
-
 	// обрабатываем пустоту полей
-	$post['clyc_create_on_fly'] = isset($post['clyc_create_on_fly']) ? 1 : 0;
-	$post['clyc_domains'] = isset($post['clyc_domains']) ? $post['clyc_domains'] : '';
+	if (isset($post['clyc_create_on_fly']) AND ($post['clyc_create_on_fly'] == 'on' OR $post['clyc_create_on_fly'] == 1)){
+		$post['clyc_create_on_fly'] =  1;
+	} else {
+		$post['clyc_create_on_fly'] =  0;
+	}
+	$post['clyc_domains'] = isset($post['clyc_domains']) ? trim_string($post['clyc_domains']) : NULL;
 
 	$sql = "UPDATE $table SET clyc_yourls_domain='%s', clyc_yourls_token='%s', clyc_create_on_fly='%s', clyc_domains='%s' WHERE id = 1";
 	$query = $wpdb->prepare($sql, $post['clyc_yourls_domain'], $post['clyc_yourls_token'], $post['clyc_create_on_fly'], $post['clyc_domains']);
+	//pp($query);
 	$result = $wpdb->query($query);
 
 	if($result === false) {

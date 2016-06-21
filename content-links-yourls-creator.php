@@ -42,15 +42,18 @@ function clyc_install(){
 		//	die('ошибка заполения '.$table);
 		//}
 		$sql = "INSERT INTO $table (id, clyc_yourls_domain, clyc_yourls_token, clyc_create_on_fly, clyc_domains) VALUES('%s', '%s', '%s', '%s', '%s')";
-		$query = $wpdb->prepare($sql, 1, '', '', 1, '');
+		$query = $wpdb->prepare($sql, 1, '', '', 1, NULL);
 		$result = $wpdb->query($query);
 		if($result === false){
 			//echo '<br>'.$query.'<br>';
 			die('ошибка заполения '.$table);
 		}
+
 	}
-	// ключ для отметки что свойства YOURLS введены - пока сразу ставим в true
+	// ключ для отметки что свойства YOURLS введены
 	add_option('clyc_installed', '0');
+	$clyc_dir =  get_clyc_dir();
+	add_option('clyc_dir', $clyc_dir);
 }
 
 /**
@@ -62,6 +65,7 @@ function clyc_uninstall(){
 
 	$sql = "DROP TABLE IF EXISTS $table";
 	$wpdb->query($sql);
+	delete_option('clyc_dir');
 	delete_option('clyc_installed');
 }
 
@@ -74,6 +78,7 @@ function clyc_delete(){
 
 	$sql = "DROP TABLE IF EXISTS $table";
 	$wpdb->query($sql);
+	delete_option('clyc_dir');
 	delete_option('clyc_installed');
 }
 
@@ -129,7 +134,19 @@ function clyc_pre_analyse_content($content){
  * Добавляем в меню пункт настроек
  */
 function clyc_admin_menu(){
-	add_menu_page('Настройки clYc', 'Настройки clYc', 8, __FILE__, 'clyc_editor', '/wp-content/plugins/content-links-yourls-creator/assets/img/scissors-16.png'); // меню
+	$clyc_dir = get_option('clyc_dir');
+	if (empty($clyc_dir)){
+		$clyc_dir =  get_clyc_dir();
+		add_option('clyc_dir', $clyc_dir);
+	}
+	add_menu_page('Настройки clYc', 'Настройки clYc', 8, __FILE__, 'clyc_editor', "/wp-content/plugins/{$clyc_dir}/assets/img/scissors-16.png"); // меню
+}
+
+/**
+ * получает имя папки, где хранится плагин
+ */
+function get_clyc_dir(){
+	return str_replace('/content-links-yourls-creator.php', '', plugin_basename( __FILE__ ));
 }
 
 /**
