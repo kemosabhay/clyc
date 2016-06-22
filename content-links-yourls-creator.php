@@ -2,7 +2,7 @@
 /*
 Plugin Name: Content links YOURLS creator
 Plugin URI:
-Description: Преобразует ссылки, найденные в контенте в короткие YOURLS.
+Description: Generates YOURLS links from links in content.
 Version: 0.1
 */
 
@@ -90,19 +90,9 @@ register_uninstall_hook(__FILE__, 'clyc_delete');
 // подключаем обработку ссылок при сохранении контента на лету
 add_filter('content_save_pre', 'clyc_pre_analyse_content');
 
-add_action( 'admin_enqueue_scripts', array( $this, 'clyc_styles' ) ); // Enqueue scripts for admin page.
-
 /**
  * Register style sheet.
  */
-
-// load css into the admin pages
-function mytheme_enqueue_options_style() {
-	wp_enqueue_style( 'mytheme-options-style', get_template_directory_uri() . '/css/admin.css' );
-}
-add_action( 'admin_enqueue_scripts', 'mytheme_enqueue_options_style' );
-
-
 
 // load css into the admin pages
 function clyc_style() {
@@ -139,7 +129,7 @@ function clyc_admin_menu(){
 		$clyc_dir =  get_clyc_dir();
 		add_option('clyc_dir', $clyc_dir);
 	}
-	add_menu_page('Настройки clYc', 'Настройки clYc', 8, __FILE__, 'clyc_editor', "/wp-content/plugins/{$clyc_dir}/assets/img/scissors-16.png"); // меню
+	add_menu_page('clYc settings', 'clYc settings', 'manage_options', basename(__FILE__), 'clyc_editor', "/wp-content/plugins/{$clyc_dir}/assets/img/scissors-16.png"); // меню
 }
 
 /**
@@ -155,5 +145,4 @@ function get_clyc_dir(){
 function clyc_editor(){
 	include_once("includes/edit.php");
 }
-
 add_action('admin_menu', 'clyc_admin_menu');

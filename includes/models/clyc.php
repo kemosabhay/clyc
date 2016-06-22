@@ -1,5 +1,4 @@
 <?php
-
 /**
  * очищает строку от лишних символов в начале и конце
  * используем при редактировании доменов
@@ -60,10 +59,10 @@ function clyc_save_options($post){
 				update_option('clyc_installed', 1);
 				$post['clyc_create_on_fly'] = 1;
 			} else {
-				return  '<span class="error">Введены неправильные настройки YOURLS</span>';
+				return  '<span class="error">Incorrect YOURLS settings!</span>';
 			}
 		} else {
-			return  '<span class="error">Введены неправильные настройки YOURLS</span>';
+			return  '<span class="error">Incorrect YOURLS settings!</span>';
 		}
 	}
 
@@ -84,10 +83,10 @@ function clyc_save_options($post){
 	$result = $wpdb->query($query);
 
 	if($result === false) {
-		return '<span class="error">Ошибка сохранения настроек</span>';
+		return '<span class="error">Settings saving error!</span>';
 	}
 
-	return '<span class="success">Настройки успешно изменены!</span>';
+	return '<span class="success">Settings successfully changed!</span>';
 }
 
 /**
@@ -193,7 +192,7 @@ function clyc_analyse_contents() {
 		$new_content = clyc_shortyfy_text_links($page->post_content, $options);
 		clyc_save_post($page->ID, $new_content);
 	}
-	return '<span class="success">Ссылки в существующем контенте преобразованы</span>';
+	return '<span class="success">Content links shortening done!</span>';
 }
 
 /**

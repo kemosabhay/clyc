@@ -1,16 +1,15 @@
 <?php
 include_once('models/clyc.php');
 
-
 // обрабатываем сабмит формы
 $message = '';
 if ( ! empty($_POST)) {
 	//pp($_POST);
 	if (isset($_POST['clyc_save_options'])) {
 		$message = clyc_save_options($_POST);
-	} elseif(isset($_POST['clyc_analyse_contents'])) {
+	} /*elseif(isset($_POST['clyc_analyse_contents'])) {
 		$message = clyc_analyse_contents();
-	}
+	}*/
 }
 
 // получаем настройки плагина
@@ -57,14 +56,14 @@ $clyc_installed = get_option('clyc_installed');
 			// проверяем нет ли этого домена уже в списке
 			var domains = $('#clyc_domains').val();
 			if (domains.indexOf(domain) != -1){
-				message = 'Даный домен уже присутствует в списке';
+				message = 'This domain is already in a list';
 			} else {
 				var html ='<div class="clyc_domain_tag"><div class="clyc_domain_name">'+domain+'</div><div class="clyc_domain_del"></div></div>';
 				$('#clyc_domain_container').append(html);
 				$('#clyc_domains').val(domains+','+domain);
 			}
 		} else {
-			message = 'Введённое значение должно быть кооректным URL';
+			message = 'Incorrect URL!';
 		}
 		if (message != ''){
 			$('.clyc_domains_td').prepend("<div class='clyc_domains_error'>"+message+"</div>");
@@ -105,34 +104,34 @@ $clyc_installed = get_option('clyc_installed');
 <div class="wrap">
 	<h1>Content links YOURLS creator</h1>
 	<?php if ($clyc_installed == 0): ?>
-		<h2>Для начала работы плагина введите данные сервера YOURLS</h2>
+		<h2>Before start please fill out YOURLS settings</h2>
 	<?php endif; ?>
 	<?=($message != '') ? "<h3>$message</h3>" : '';?>
-	<table>
+	<table width="100%">
 		<tr>
 			<td width="50%">
 				<form method="post" action="">
-					<table >
+					<table>
 						<tr>
-							<td colspan="2"><h4>Общие настройки плагина</h4></td>
+							<td colspan="2"><h4>Plugin settings</h4></td>
 						</tr>
 						<tr>
 							<td colspan="2"><hr></td>
 						</tr>
 						<tr>
 							<td>
-								Домен YOURLS
+								YOURLS domain
 							</td>
-							<td width="60%">
-								<input name="clyc_yourls_domain" type="text" value="<?=$options['clyc_yourls_domain']?>">
+							<td width="70%">
+								<input name="clyc_yourls_domain" type="text" value="<?=$options['clyc_yourls_domain']?>" />
 							</td>
 						</tr>
 						<tr>
 							<td>
-								Токен YOURLS
+								YOURLS token
 							</td>
 							<td>
-								<input name="clyc_yourls_token" type="text" value="<?=$options['clyc_yourls_token']?>">
+								<input name="clyc_yourls_token" type="text" value="<?=$options['clyc_yourls_token']?>" />
 							</td>
 						</tr>
 						<tr>
@@ -142,10 +141,10 @@ $clyc_installed = get_option('clyc_installed');
 						<?php if ($clyc_installed == 1): ?>
 							<tr>
 								<td>
-									Преобразовывать ссылки "на лету"
+									Shorten links "on fly"
 								</td>
 								<td>
-									<input name="clyc_create_on_fly" type="checkbox" <?echo ($options['clyc_create_on_fly'] == 1) ? 'checked' : ''?>>
+									<input name="clyc_create_on_fly" type="checkbox" <?=($options['clyc_create_on_fly'] == 1) ? 'checked' : '';?> />
 								</td>
 							</tr>
 							<tr>
@@ -155,7 +154,7 @@ $clyc_installed = get_option('clyc_installed');
 							</tr>
 							<tr>
 								<td valign="top"  >
-									Список доменов:<br><div class="clyc_form_note">Добавляйте домены по одному</div>
+									Domains list:<br><div class="clyc_form_note">add by one</div>
 								</td>
 								<td valign="top" class="clyc_domains_td">
 									<input id="add_domain" class="add_domain" type="text" value=""><div id="add_domain_btn" class="add_domain_btn" ></div>
@@ -169,7 +168,6 @@ $clyc_installed = get_option('clyc_installed');
 											</div>
 										<?php endforeach;?>
 									</div>
-									<!--<textarea name="clyc_domains" cols="50" id="clyc_domains" rows="4">--><?//=$options['clyc_domains']?><!--</textarea>-->
 									<input name="clyc_domains" id="clyc_domains" type="hidden" value="<?=$options['clyc_domains']?>">
 								</td>
 							</tr>
@@ -180,18 +178,17 @@ $clyc_installed = get_option('clyc_installed');
 						<?php endif; ?>
 						<tr>
 							<td align="center" colspan="2">
-								<input type="submit" name="clyc_save_options"  value="Сохранить" />
+								<input type="submit" name="clyc_save_options"  value="Save" />
 							</td>
 						</tr>
 					</table>
 				</form>
 			</td>
-			<?/*
-			// TODO доработать этот функционал
 			<td width="3%"></td>
 			<td valign="top">
 				<!-- показываем доп настройки только после установки свойст YOURLS -->
-				<?php if ($clyc_installed == 1): ?>
+				<?//php if ($clyc_installed == 1): ?>
+				<?php if (FALSE): ?>
 					<table>
 						<tr>
 							<td colspan="2"><h4>Преобразовать ссылки в существующем контенте</h4></td>
@@ -222,9 +219,6 @@ $clyc_installed = get_option('clyc_installed');
 					</table>
 				<?php endif; ?>
 			</td>
-			*/?>
 		</tr>
 	</table>
-
-
 </div>
