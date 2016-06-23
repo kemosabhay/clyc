@@ -38,37 +38,55 @@ $clyc_installed = get_option('clyc_installed');
 	 * добавление нового домена в список
 	 */
 	function addDomain() {
-		var message = ''; // строка для хранения ошибок
+		var message = ''; // error string
 		$('.clyc_domains_error').remove();
-		// получаем домен
-		var domain = $('#add_domain').val();
-		if(isURL(domain)){
-			// очищаем от лишнего домен
-			$('#add_domain').val('');
-			domain = domain.toLowerCase();
-			domain = domain.replace("http://", "");
-			domain = domain.replace("https://", "");
-			domain = domain.replace("www.", "");
-			if (domain.slice(-1) == '/') {
-				domain = domain.substring(0,domain.length-1);
-			}
 
-			// проверяем нет ли этого домена уже в списке
-			var domains = $('#clyc_domains').val();
-			if (domains.indexOf(domain) != -1){
-				message = 'This domain is already in a list';
-			} else {
-				var html ='<div class="clyc_domain_tag"><div class="clyc_domain_name">'+domain+'</div><div class="clyc_domain_del"></div></div>';
-				$('#clyc_domain_container').append(html);
-				$('#clyc_domains').val(domains+','+domain);
-			}
+		// getting domain from input and clear trash
+		var domain = $('#add_domain').val();
+		domain = domain.toLowerCase();
+		if (domain.slice(-1) == '/' || domain.slice(-1) == ',') {
+			domain = domain.substring(0,domain.length-1);
+			domain = domain.trim();
+		}
+
+		// making array
+		var domainArr = [];
+		if(domain.indexOf(",") > 0){
+			domainArr = domain.split(",");
 		} else {
-			message = 'Incorrect URL!';
+			domainArr = [domain];
 		}
-		if (message != ''){
-			$('.clyc_domains_td').prepend("<div class='clyc_domains_error'>"+message+"</div>");
-			return false;
+		// checking and adding one by one
+		var i;
+		for (i = 0; i < domainArr.length; ++i) {
+			var url = domainArr[i].trim();
+
+			//console.log(domainArr[index].trim());
+			if(isURL(url)){
+				// clear
+				url = url.replace("http://", "");
+				url = url.replace("https://", "");
+				url = url.replace("www.", "");
+
+				// check if domain is already in a list
+				var domains = $('#clyc_domains').val();
+				if (domains.indexOf(url) != -1){
+					message = 'This domain is already in a list';
+				} else {
+					var html ='<div class="clyc_domain_tag"><div class="clyc_domain_name">'+url+'</div><div class="clyc_domain_del"></div></div>';
+					$('#clyc_domain_container').append(html);
+					$('#clyc_domains').val(domains+','+url);
+				}
+			} else {
+				message = 'Incorrect URL!';
+			}
+			if (message != ''){
+				$('.clyc_domains_td').prepend("<div class='clyc_domains_error'>"+message+"</div>");
+				return false;
+			}
 		}
+		// clear input
+		$('#add_domain').val('');
 	}
 
 	$( document ).ready(function() {
@@ -113,7 +131,7 @@ $clyc_installed = get_option('clyc_installed');
 				<form method="post" action="">
 					<table>
 						<tr>
-							<td colspan="2"><h4>Plugin settings</h4></td>
+							<td colspan="2"><h2>Plugin settings</h2></td>
 						</tr>
 						<tr>
 							<td colspan="2"><hr></td>
@@ -154,7 +172,7 @@ $clyc_installed = get_option('clyc_installed');
 							</tr>
 							<tr>
 								<td valign="top"  >
-									Domains list:<br><div class="clyc_form_note">add by one</div>
+									Domains list:<br><div class="clyc_form_note">one or more comma-separated</div>
 								</td>
 								<td valign="top" class="clyc_domains_td">
 									<input id="add_domain" class="add_domain" type="text" value=""><div id="add_domain_btn" class="add_domain_btn" ></div>

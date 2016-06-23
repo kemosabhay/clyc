@@ -129,7 +129,7 @@ function clyc_admin_menu(){
 		$clyc_dir =  get_clyc_dir();
 		add_option('clyc_dir', $clyc_dir);
 	}
-	add_menu_page('clYc settings', 'clYc settings', 'manage_options', basename(__FILE__), 'clyc_editor', "/wp-content/plugins/{$clyc_dir}/assets/img/scissors-16.png"); // меню
+	add_menu_page('clYc settings', 'clYc settings', 'manage_options', basename(__FILE__), 'clyc_editor', "/wp-content/plugins/{$clyc_dir}/assets/img/scissors.png"); // меню
 }
 
 /**

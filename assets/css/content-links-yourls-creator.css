@@ -20,26 +20,26 @@ h3 .error{
 }
 .clyc_domain_tag{
 	background: #fff none repeat scroll 0 0;
-	border: 1px solid #9C9D99;
+	border: 1px solid #c2c2c2;
 	border-radius: 8px;
 	display: inline-block;
 	margin: 2px;
-	padding: 3px 18px 3px 3px;
+	padding: 4px 18px 4px 4px;
 	position: relative;
 	width: auto;
 }
 .clyc_domain_name{
 	display: inline-block;
-	color: #656664;
+	color: #404040;
 }
 .clyc_domain_del{
 	background: rgba(0, 0, 0, 0) url("../img/close-16.png") repeat scroll 0 0;
-	height: 16px;
-	position: absolute;
-	right: 1px;
-	top: 5px;
-	width: 16px;
 	cursor: pointer;
+	height: 10px;
+	position: absolute;
+	right: 4px;
+	top: 9px;
+	width: 10px;
 }
 .add_domain{
 	float: left;

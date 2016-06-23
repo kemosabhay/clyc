@@ -50,7 +50,7 @@ function clyc_save_options($post){
 	// обрабатываем первоначальную настройку плагина
 	$clyc_installed = get_option('clyc_installed');
 
-	if($clyc_installed == 0) {
+	//if($clyc_installed == 0) {
 		// елси получены YOURLS данные - пробуем сделать тестовое преобразование урла
 		if ( ! empty($post['clyc_yourls_domain']) AND ! empty($post['clyc_yourls_token']) ){
 			$data = clyc_send_yourls_curl($post['clyc_yourls_domain'], $post['clyc_yourls_token'], 'http://yandex.ru');
@@ -64,7 +64,7 @@ function clyc_save_options($post){
 		} else {
 			return  '<span class="error">Incorrect YOURLS settings!</span>';
 		}
-	}
+	//}
 
 	// сохраняем натсрйоки в БД
 	global $wpdb;
