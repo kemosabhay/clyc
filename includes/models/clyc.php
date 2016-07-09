@@ -1,8 +1,10 @@
 <?php
+
 /**
- * очищает строку от лишних символов в начале и конце
- * используем при редактировании доменов
+ * trims string from semicolons and spaces
+ * used in edit domains' list
  * @param $str
+ * @return string
  */
 function trim_string($str) {
 	$str = rtrim(rtrim($str), ",");
@@ -36,6 +38,7 @@ function clyc_get_options(){
 	$table = clyc_get_table();
 	$query = "SELECT * FROM $table WHERE id = '1'";
 	$result = $wpdb->get_results($query, ARRAY_A);
+	$result[0]['saved_urls'] = clyc_get_saved_urls();
 	return $result[0];
 }
 
@@ -100,7 +103,7 @@ function clyc_save_options($post){
  * @return mixed
  */
 function clyc_shortyfy_text_links($text, $options, $onfly = FALSE) {
-	//echo $text.'<br>';
+	echo $text.'<br>';
 	// паттерн для поиска ссылок
 	$regex = '/<a ([\r\n\w+\W+].*?)>([\r\n\w+\W+].*?)<\/a>/';
 
@@ -109,11 +112,11 @@ function clyc_shortyfy_text_links($text, $options, $onfly = FALSE) {
 			$regex,
 			function($matches) use ($options, $onfly) {
 				$domains = $options['clyc_domains'];
-				//pp($domains);
+				pp($domains);
 
 				// получаем ссылку
 				$link = $matches[0];
-				//echo "<hr> analyze link: $link";
+				echo "<hr> analyze link: $link";
 
 				if ($link != ''){
 					// елси преобразование происходит на лету, подчищаем ссылку от экранирования
@@ -123,22 +126,21 @@ function clyc_shortyfy_text_links($text, $options, $onfly = FALSE) {
 
 					// вытаскиваем из ссылки url - содержимое параметра href
 					preg_match("/href=(\"|')[^\"\']+(\"|')/i", $link, $result);
-					//echo "preg match";
-					//print_r($result);
-					$url = '';
+					echo "<br>preg match";
+					pp($result);
 					if ( ! empty($result[0])){
 						$url = str_replace("href='", "", $result[0]);
 						$url = str_replace('href="', "", $url);
 						$url = substr_replace($url, "", -1);
 					}
 					if( ! empty($url)){
-						//echo "<br>got url: $url";
-						//echo "<br>checking domains";
+						echo "<br>got url: $url";
+						echo "<br>checking domains";
 
 						// проверяем поученный урл на совпадение с доменами из настроек плагина
 						foreach ($domains as $domain) {
-							//echo "<br>seek domain: $domain in $url result: $pos";
 							$pos = strripos($url, trim($domain));
+							echo "<br>seek domain: $domain in $url result: $pos";
 							if ($pos !== false) {
 								// елси урл совпал с доменом - преобразуем урл
 								$link = clyc_shortify_link($url, $link, $options);
@@ -154,6 +156,112 @@ function clyc_shortyfy_text_links($text, $options, $onfly = FALSE) {
 }
 
 /**
+ * get from DB pairs of saved before and shortyfied urls
+ * using for not use YOURLS for links which was already shortyfied before
+ * @return array of url => yourl pairs
+ */
+function clyc_get_saved_urls(){
+	global $wpdb;
+	$table = clyc_get_table().'_urls';
+	$query = "SELECT * FROM {$table}";
+	$res = $wpdb->get_results($query, ARRAY_A);
+	$result = array();
+	foreach ($res as $row){
+		if ( ! isset($result[$row['url']])){
+			$result[$row['url']] = $row['yourl'];
+		}
+	}
+	return $result;
+}
+
+/**
+ * Save to DB new url => yourl pair
+ * @param $url
+ * @param $yourl
+ * @return false|int
+ */
+function clyc_update_saved_urls($url, $yourl){
+	global $wpdb;
+	$table = clyc_get_table().'_urls';
+	$sql = "INSERT INTO $table (url, yourl) VALUES('%s', '%s')";
+	$query = $wpdb->prepare($sql, $url, $yourl);
+	return $wpdb->query($query);
+}
+
+/**
+ * находит в переданном тексте урлы, сравнивает их со списком доменов из опций плагина
+ * если находит среди ссылок домены - преобразует урлы с помощью clyc_shortify_url()
+ *
+ * @param $text - анализируемый текст
+ * @param $options - настройки плагина
+ * @param $onfly - ключ, отемчающий происходит ли анализ при сохранении поста
+ * @return mixed
+ */
+function clyc_shortyfy_text_urls($text, $options, $onfly = FALSE){
+	//echo $text;
+	$sUrls = $options['saved_urls'];
+	$domains = $options['clyc_domains'];
+
+	$reg_exUrl = "/([\w]+:\/\/[\w-?&;#~=\.\/\@]+[\w\/])/i";
+	preg_match_all($reg_exUrl, $text, $matches);
+	$links = array_unique($matches[0]);
+
+	//echo '<br>$sUrls:';pp($sUrls);
+	//echo '<br>links from text:';pp($links);
+	//echo '<br>domains:';pp($domains);
+
+	$clycable = array();
+
+	foreach($links as $url){
+		// елси преобразование происходит на лету, подчищаем ссылку от экранирования
+		if ( $url ){
+			$url = stripslashes ($url);
+		}
+
+		//echo '<br> $url:'.$url;
+
+		// checking founded urls on containing domains from options
+		foreach ($domains as $domain) {
+			$pos = strripos($url, trim($domain));
+			if ($pos !== false) {
+				// if url cntains domain - changing it
+				$cleanUrl = $url;
+				if (substr($url, -1) == '/'){
+					$cleanUrl = substr($url,0, strlen($url)-1);
+				}
+				$cleanUrl = str_replace("www.", "", $cleanUrl);
+
+				// check if we shortyfied this url before
+				if (isset($sUrls[$cleanUrl])) {
+					$yourl = $sUrls[$cleanUrl];
+				} else {
+					// if not -getting new yourl
+					$yourl = clyc_shortify_url($cleanUrl, $options);
+					// save pair to DB
+					clyc_update_saved_urls($cleanUrl, $yourl);
+				}
+
+				$clycable[] =  array(
+						'url' => $url,
+						'yourl' => $yourl
+				);
+			}
+		}
+	}
+
+	//echo '<br>$clycable:';pp($clycable);
+
+	foreach ($clycable as $pair){
+		//$pos = strripos($text, trim($pair['url']));
+		while (strripos($text, trim($pair['url']))) {
+			$text = str_replace($pair['url'], $pair['yourl'], $text);
+		}
+	}
+
+	return $text;
+}
+
+/**
  * Сохраняет контент поста / страницы
  * TODO - не ли встроенной безопасной функции WP?
  * @param $post_id - ид строки
@@ -166,7 +274,7 @@ function clyc_save_post($post_id, $post_content) {
 	$query = $wpdb->prepare($sql, $post_content, $post_id);
 	$result = $wpdb->query($query);
 	if($result === false) {
-		die('Ошибка сохранения натстроек');
+		die('Ошибка сохранения настроек');
 	}
 	return TRUE;
 }
@@ -211,7 +319,22 @@ function clyc_shortify_link($url, $link, $options) {
 }
 
 /**
- * Отправляет ссылку на преобрзование в YOURLS  по curl
+ * getting new YOURL for url link
+ * @param $url
+ * @param $options
+ * @return mixed
+ */
+function clyc_shortify_url($url, $options) {
+	$data = clyc_send_yourls_curl($options['clyc_yourls_domain'], $options['clyc_yourls_token'], $url);
+	$link = $url;
+	if ( ! empty($data->shorturl)) {
+		$link = $data->shorturl;
+	}
+	return $link;
+}
+
+/**
+ * getting shortified YOURLS link by curl
  *
  * @param $yourls_domain
  * @param $yourls_token

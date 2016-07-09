@@ -3,7 +3,7 @@
 Plugin Name: Content links YOURLS creator
 Plugin URI:
 Description: Generates YOURLS links from links in content.
-Version: 0.1
+Version: 0.2
 */
 
 
@@ -33,14 +33,30 @@ function clyc_install(){
 			//echo '<br>'.$sql.'<br>';
 			die('ошибка создания '.$table);
 		}
-		//TODO  подумать о более изящном хранении настроек
-		//$sql = "INSERT INTO $table (id, clyc_yourls_domain, clyc_yourls_token, clyc_create_on_fly, clyc_domains) VALUES('%s', '%s', '%s', '%s', '%s')";
-		//$query = $wpdb->prepare($sql, 1, 'http://yourls.test', '9ffa37b6569ffa37b656', 1, 'yandex.ru');
-		//$result = $wpdb->query($query);
-		//if($result === false){
-		//	echo '<br>'.$query.'<br>';
-		//	die('ошибка заполения '.$table);
-		//}
+
+		// таблица для хранения преобразованных урлов
+		/*CREATE TABLE IF NOT EXISTS `wp_clyc_urls` (
+			`id` int(10) NOT NULL AUTO_INCREMENT,
+			`url` varchar(256) NOT NULL,
+			`yourl` varchar(256) NOT NULL,
+			PRIMARY KEY (`id`),
+			KEY `url` (`url`(255))
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;*/
+
+		$sql = "CREATE TABLE IF NOT EXISTS `{$table}_urls` (
+					`id` int(10) NOT NULL AUTO_INCREMENT,
+					`url` varchar(256) NOT NULL,
+					`yourl` varchar(256) NOT NULL,
+					PRIMARY KEY (`id`),
+					KEY `url` (`url`(255))
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+		$result =  $wpdb->query($sql);
+
+		if($result === false){
+			//echo '<br>'.$query.'<br>';
+			die('ошибка заполения '.$table);
+		}
+
 		$sql = "INSERT INTO $table (id, clyc_yourls_domain, clyc_yourls_token, clyc_create_on_fly, clyc_domains) VALUES('%s', '%s', '%s', '%s', '%s')";
 		$query = $wpdb->prepare($sql, 1, '', '', 1, NULL);
 		$result = $wpdb->query($query);
@@ -48,7 +64,6 @@ function clyc_install(){
 			//echo '<br>'.$query.'<br>';
 			die('ошибка заполения '.$table);
 		}
-
 	}
 	// ключ для отметки что свойства YOURLS введены
 	add_option('clyc_installed', '0');
@@ -114,7 +129,8 @@ function clyc_pre_analyse_content($content){
 	// если задано в условиях - преобразуем ссылки
 	if ($options['clyc_create_on_fly'] == 1) {
 		$options['clyc_domains'] = explode(',', $options['clyc_domains']);
-		return  clyc_shortyfy_text_links($content, $options, TRUE);
+		//return  clyc_shortyfy_text_links($content, $options, TRUE);
+		return  clyc_shortyfy_text_urls($content, $options, TRUE);
 	} else {
 		return $content;
 	}

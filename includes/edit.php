@@ -17,6 +17,10 @@ $options = clyc_get_options();
 
 $clyc_domains = ( ! empty($options['clyc_domains'])) ? explode(',', $options['clyc_domains']) : array();
 $clyc_installed = get_option('clyc_installed');
+
+//$page = 'Добро пожаловать в http://linux.net/ WordPress. Это ваша первая <a href="https://www.turbobit.net/im60ahdbeluq.html">https://turbobit.net/im60ahdbeluq.html</a> запись. Отредактируйте или удалите <a href="http://yandex.ru/">http://yandex.ru/</a>её, затем  https://raka.rak пишите! <a href="http://waper.ru">http://waper.ru</a> ';
+//$options['clyc_domains'] = explode(',', $options['clyc_domains']);
+//echo clyc_shortyfy_text_urls($page, $options, FALSE);
 ?>
 <script>
 	/**
