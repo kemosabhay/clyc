@@ -6,7 +6,6 @@ Description: Generates YOURLS links from links in content.
 Version: 0.2
 */
 
-
 include_once('includes/models/clyc.php');
 define( 'CLYC_VERSION', '0.1' );
 define( 'CLYC_URL', plugin_dir_url( __FILE__ ) );
@@ -25,6 +24,7 @@ function clyc_install(){
 					`clyc_yourls_token` varchar(256) NULL,
 					`clyc_create_on_fly` tinyint(1) NULL,
 					`clyc_domains` text NULL,
+					`clyc_shorten_link_types` VARCHAR(54) NULL DEFAULT 'all',
 					PRIMARY KEY (`id`)
 				) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 		$result =  $wpdb->query($sql);
@@ -41,7 +41,9 @@ function clyc_install(){
 			`yourl` varchar(256) NOT NULL,
 			PRIMARY KEY (`id`),
 			KEY `url` (`url`(255))
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;*/
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+		*/
 
 		$sql = "CREATE TABLE IF NOT EXISTS `{$table}_urls` (
 					`id` int(10) NOT NULL AUTO_INCREMENT,
@@ -129,8 +131,12 @@ function clyc_pre_analyse_content($content){
 	// если задано в условиях - преобразуем ссылки
 	if ($options['clyc_create_on_fly'] == 1) {
 		$options['clyc_domains'] = explode(',', $options['clyc_domains']);
-		//return  clyc_shortyfy_text_links($content, $options, TRUE);
-		return  clyc_shortyfy_text_urls($content, $options, TRUE);
+
+		if($options['clyc_shorten_link_types'] == 'all'){
+			return  clyc_shortyfy_text_urls($content, $options, TRUE);
+		} else {
+			return  clyc_shortyfy_anchor_urls($content, $options, TRUE);
+		}
 	} else {
 		return $content;
 	}

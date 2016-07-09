@@ -14,13 +14,16 @@ if ( ! empty($_POST)) {
 
 // получаем настройки плагина
 $options = clyc_get_options();
-
 $clyc_domains = ( ! empty($options['clyc_domains'])) ? explode(',', $options['clyc_domains']) : array();
 $clyc_installed = get_option('clyc_installed');
 
-//$page = 'Добро пожаловать в http://linux.net/ WordPress. Это ваша первая <a href="https://www.turbobit.net/im60ahdbeluq.html">https://turbobit.net/im60ahdbeluq.html</a> запись. Отредактируйте или удалите <a href="http://yandex.ru/">http://yandex.ru/</a>её, затем  https://raka.rak пишите! <a href="http://waper.ru">http://waper.ru</a> ';
-//$options['clyc_domains'] = explode(',', $options['clyc_domains']);
-//echo clyc_shortyfy_text_urls($page, $options, FALSE);
+//$page = 'Добро пожаловать в http://linux.net/ WordPress. Это ваша первая <a href="https://www.turbobit.net/im60ahdbeluq.html">https://www.turbobit.net/im60ahdbeluq.html</a> запись. Отредактируйте или удалите <a href="http://yandex.ru/">http://yandex.ru/</a>её, затем  https://raka.rak пишите! <a href="http://waper.ru">http://waper.ru</a> ';
+//if($options['clyc_shorten_link_types'] == 'all'){
+//	echo clyc_shortyfy_text_urls($page, $options, FALSE);
+//} else {
+//	echo clyc_shortyfy_anchor_urls($page, $options, FALSE);
+//}
+
 ?>
 <script>
 	/**
@@ -159,7 +162,7 @@ $clyc_installed = get_option('clyc_installed');
 						<tr>
 							<td colspan="2"><hr></td>
 						</tr>
-						<!-- показываем доп настройки только после утсановки свойст YOURLS -->
+						<!-- показываем доп настройки только после установки свойст YOURLS -->
 						<?php if ($clyc_installed == 1): ?>
 							<tr>
 								<td>
@@ -170,12 +173,25 @@ $clyc_installed = get_option('clyc_installed');
 								</td>
 							</tr>
 							<tr>
+								<td colspan="2"><br></td>
+							</tr>
+							<tr>
+								<td>
+									Shorten link types
+								</td>
+								<td>
+									<input type="radio" name="clyc_shorten_link_types"  <?=($options['clyc_shorten_link_types'] == 'all') ? 'checked' : '';?> value="all"> All urls <div class="clyc_form_note">(both text urls and urls inside &lt;a&gt; tags)</div><br>
+									<input type="radio" name="clyc_shorten_link_types" <?=($options['clyc_shorten_link_types'] == 'aurls') ? 'checked' : '';?> value="aurls"> Only in links <div class="clyc_form_note">(urls inside &lt;a&gt; tags)</div><br/>
+									<input type="radio" name="clyc_shorten_link_types" <?=($options['clyc_shorten_link_types'] == 'hrefs') ? 'checked' : '';?> value="hrefs"> Only hrefs <div class="clyc_form_note">(only urls inside links' href attribute &lt;a href='..'&gt; )</div>
+								</td>
+							</tr>
+							<tr>
 								<td colspan="2">
 									&nbsp;
 								</td>
 							</tr>
 							<tr>
-								<td valign="top"  >
+								<td valign="top">
 									Domains list:<br><div class="clyc_form_note">one or more comma-separated</div>
 								</td>
 								<td valign="top" class="clyc_domains_td">

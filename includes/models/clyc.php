@@ -51,8 +51,7 @@ function clyc_get_options(){
  */
 function clyc_save_options($post){
 	// обрабатываем первоначальную настройку плагина
-	$clyc_installed = get_option('clyc_installed');
-
+	//$clyc_installed = get_option('clyc_installed');
 	//if($clyc_installed == 0) {
 		// елси получены YOURLS данные - пробуем сделать тестовое преобразование урла
 		if ( ! empty($post['clyc_yourls_domain']) AND ! empty($post['clyc_yourls_token']) ){
@@ -80,8 +79,8 @@ function clyc_save_options($post){
 	}
 	$post['clyc_domains'] = isset($post['clyc_domains']) ? trim_string($post['clyc_domains']) : NULL;
 
-	$sql = "UPDATE $table SET clyc_yourls_domain='%s', clyc_yourls_token='%s', clyc_create_on_fly='%s', clyc_domains='%s' WHERE id = 1";
-	$query = $wpdb->prepare($sql, $post['clyc_yourls_domain'], $post['clyc_yourls_token'], $post['clyc_create_on_fly'], $post['clyc_domains']);
+	$sql = "UPDATE $table SET clyc_yourls_domain='%s', clyc_yourls_token='%s', clyc_create_on_fly='%s', clyc_domains='%s', clyc_shorten_link_types='%s' WHERE id = 1";
+	$query = $wpdb->prepare($sql, $post['clyc_yourls_domain'], $post['clyc_yourls_token'], $post['clyc_create_on_fly'], $post['clyc_domains'], $post['clyc_shorten_link_types']);
 	//pp($query);
 	$result = $wpdb->query($query);
 
@@ -102,8 +101,8 @@ function clyc_save_options($post){
  * @param $onfly - ключ, отемчающий происходит ли анализ при сохранении поста
  * @return mixed
  */
-function clyc_shortyfy_text_links($text, $options, $onfly = FALSE) {
-	echo $text.'<br>';
+function clyc_shortyfy_anchor_urls($text, $options, $onfly = FALSE) {
+	//echo '<br>text before';echo $text.'<br>';
 	// паттерн для поиска ссылок
 	$regex = '/<a ([\r\n\w+\W+].*?)>([\r\n\w+\W+].*?)<\/a>/';
 
@@ -111,12 +110,12 @@ function clyc_shortyfy_text_links($text, $options, $onfly = FALSE) {
 	$replaced_text = preg_replace_callback(
 			$regex,
 			function($matches) use ($options, $onfly) {
-				$domains = $options['clyc_domains'];
-				pp($domains);
+				$domains = is_array($options['clyc_domains']) ? $options['clyc_domains'] : explode(',', $options['clyc_domains']);
+				//pp($domains);
 
 				// получаем ссылку
 				$link = $matches[0];
-				echo "<hr> analyze link: $link";
+				//echo "<hr> analyze link: $link";
 
 				if ($link != ''){
 					// елси преобразование происходит на лету, подчищаем ссылку от экранирования
@@ -126,21 +125,21 @@ function clyc_shortyfy_text_links($text, $options, $onfly = FALSE) {
 
 					// вытаскиваем из ссылки url - содержимое параметра href
 					preg_match("/href=(\"|')[^\"\']+(\"|')/i", $link, $result);
-					echo "<br>preg match";
-					pp($result);
+					//echo "<br>preg match";
+					//pp($result);
 					if ( ! empty($result[0])){
 						$url = str_replace("href='", "", $result[0]);
 						$url = str_replace('href="', "", $url);
 						$url = substr_replace($url, "", -1);
 					}
 					if( ! empty($url)){
-						echo "<br>got url: $url";
-						echo "<br>checking domains";
+						//echo "<br>got url: $url";
+						//echo "<br>checking domains";
 
 						// проверяем поученный урл на совпадение с доменами из настроек плагина
 						foreach ($domains as $domain) {
 							$pos = strripos($url, trim($domain));
-							echo "<br>seek domain: $domain in $url result: $pos";
+							//echo "<br>seek domain: $domain in $url result: $pos";
 							if ($pos !== false) {
 								// елси урл совпал с доменом - преобразуем урл
 								$link = clyc_shortify_link($url, $link, $options);
@@ -152,6 +151,7 @@ function clyc_shortyfy_text_links($text, $options, $onfly = FALSE) {
 			},
 			$text
 	);
+	//echo '<br>text after';
 	return $replaced_text;
 }
 
@@ -198,9 +198,9 @@ function clyc_update_saved_urls($url, $yourl){
  * @return mixed
  */
 function clyc_shortyfy_text_urls($text, $options, $onfly = FALSE){
-	//echo $text;
+	//echo '<br>text before';	echo $text;
 	$sUrls = $options['saved_urls'];
-	$domains = $options['clyc_domains'];
+	$domains = is_array($options['clyc_domains']) ? $options['clyc_domains'] : explode(',', $options['clyc_domains']);
 
 	$reg_exUrl = "/([\w]+:\/\/[\w-?&;#~=\.\/\@]+[\w\/])/i";
 	preg_match_all($reg_exUrl, $text, $matches);
@@ -217,9 +217,7 @@ function clyc_shortyfy_text_urls($text, $options, $onfly = FALSE){
 		if ( $url ){
 			$url = stripslashes ($url);
 		}
-
 		//echo '<br> $url:'.$url;
-
 		// checking founded urls on containing domains from options
 		foreach ($domains as $domain) {
 			$pos = strripos($url, trim($domain));
@@ -248,16 +246,14 @@ function clyc_shortyfy_text_urls($text, $options, $onfly = FALSE){
 			}
 		}
 	}
-
 	//echo '<br>$clycable:';pp($clycable);
-
 	foreach ($clycable as $pair){
 		//$pos = strripos($text, trim($pair['url']));
 		while (strripos($text, trim($pair['url']))) {
 			$text = str_replace($pair['url'], $pair['yourl'], $text);
 		}
 	}
-
+	//echo '<br>text after';
 	return $text;
 }
 
@@ -281,26 +277,27 @@ function clyc_save_post($post_id, $post_content) {
 
 /**
  * Получает список постов и страниц,
- * прогоняет их контент через преобразователь ссылок clyc_shortyfy_text_links()
+ * прогоняет их контент через преобразователь ссылок clyc_shortyfy_anchor_urls()
  */
 function clyc_analyse_contents() {
 	// получаем настройки плагина
-	$options = clyc_get_options();
-	$options['clyc_domains'] = explode(',', $options['clyc_domains']);
-
-	// прогоняем через преобразователь ссылок посты
-	$post_list = get_posts();
-	foreach ( $post_list as $post ) {
-		$new_content = clyc_shortyfy_text_links($post->post_content, $options);
-		clyc_save_post($post->ID, $new_content);
-	}
-	// прогоняем через преобразователь ссылок страницы
-	$pages_list = get_pages();
-	foreach ( $pages_list as $page ) {
-		$new_content = clyc_shortyfy_text_links($page->post_content, $options);
-		clyc_save_post($page->ID, $new_content);
-	}
-	return '<span class="success">Content links shortening done!</span>';
+	//$options = clyc_get_options();
+	//$options['clyc_domains'] = explode(',', $options['clyc_domains']);
+	//
+	//// прогоняем через преобразователь ссылок посты
+	//$post_list = get_posts();
+	//foreach ( $post_list as $post ) {
+	//	$new_content = clyc_shortyfy_anchor_urls($post->post_content, $options);
+	//	clyc_save_post($post->ID, $new_content);
+	//}
+	//// прогоняем через преобразователь ссылок страницы
+	//$pages_list = get_pages();
+	//foreach ( $pages_list as $page ) {
+	//	$new_content = clyc_shortyfy_anchor_urls($page->post_content, $options);
+	//	clyc_save_post($page->ID, $new_content);
+	//}
+	//return '<span class="success">Content links shortening done!</span>';
+	return;
 }
 
 /**
@@ -311,9 +308,38 @@ function clyc_analyse_contents() {
  * @return mixed
  */
 function clyc_shortify_link($url, $link, $options) {
-	$data = clyc_send_yourls_curl($options['clyc_yourls_domain'], $options['clyc_yourls_token'], $url);
-	if ( ! empty($data->shorturl)) {
-		$link = str_replace($url, $data->shorturl, $link);
+	$sUrls = $options['saved_urls'];
+	$yourl = $url;
+
+	$cleanUrl = $url;
+	if (substr($url, -1) == '/'){
+		$cleanUrl = substr($url,0, strlen($url)-1);
+	}
+	$cleanUrl = str_replace("www.", "", $cleanUrl);
+
+	// check if we shortyfied this url before
+	if (isset($sUrls[$cleanUrl])) {
+		$yourl = $sUrls[$cleanUrl];
+	} else {
+		// if not -getting new yourl
+		$data = clyc_send_yourls_curl($options['clyc_yourls_domain'], $options['clyc_yourls_token'], $cleanUrl);
+		if ( ! empty($data->shorturl)) {
+			$yourl = $data->shorturl;
+			// save pair to DB
+			clyc_update_saved_urls($url, $yourl);
+		}
+	}
+
+	if ($url != $yourl) {
+		if ($options['clyc_shorten_link_types'] == 'hrefs') {
+			// replase only href url
+			$link = str_replace("href='".$url, "href='".$yourl, $link);
+			$link = str_replace('href="'.$url, 'href="'.$yourl, $link);
+			$link = str_replace("href=".$url, "href=".$yourl, $link);
+		} else {
+			//$options['clyc_shorten_link_types'] == 'aurls'
+			$link = str_replace($url, $yourl, $link);
+		}
 	}
 	return $link;
 }
