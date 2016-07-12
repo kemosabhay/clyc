@@ -17,64 +17,71 @@ function clyc_install(){
 	global $wpdb;
 	$table = clyc_get_table();
 
-	if( $wpdb->get_var("SHOW TABLES LIKE $table") != $table ){
-		$sql = "CREATE TABLE IF NOT EXISTS `$table` (
-					`id` int(11) NOT NULL,
-					`clyc_yourls_domain` varchar(256) NULL,
-					`clyc_yourls_token` varchar(256) NULL,
-					`clyc_create_on_fly` tinyint(1) NULL,
-					`clyc_domains` text NULL,
-					`clyc_shorten_link_types` VARCHAR(54) NULL DEFAULT 'all',
-					PRIMARY KEY (`id`)
-				) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
-		$result =  $wpdb->query($sql);
+	$sql = "CREATE TABLE IF NOT EXISTS $table (
+	  `id` int(11) NOT NULL,
+	  `clyc_yourls_domain` varchar(256) DEFAULT NULL,
+	  `clyc_yourls_token` varchar(256) DEFAULT NULL,
+	  `clyc_create_on_fly` tinyint(1) DEFAULT NULL,
+	  `clyc_domains` text,
+	  `clyc_shorten_link_types` varchar(54) DEFAULT 'all',
+	  PRIMARY KEY (`id`)
+	) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
-		if($result === false){
-			//echo '<br>'.$sql.'<br>';
-			die('ошибка создания '.$table);
-		}
+	$result =  $wpdb->query($sql);
+	if($result === false){
+		die('ошибка создания '.$table);
+	}
 
-		// таблица для хранения преобразованных урлов
-		/*CREATE TABLE IF NOT EXISTS `wp_clyc_urls` (
-			`id` int(10) NOT NULL AUTO_INCREMENT,
-			`url` varchar(256) NOT NULL,
-			`yourl` varchar(256) NOT NULL,
-			PRIMARY KEY (`id`),
-			KEY `url` (`url`(255))
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+	$query = "SELECT * FROM {$table}";
+	$res = $wpdb->get_results($query, ARRAY_A);
 
-		*/
-
-		$sql = "CREATE TABLE IF NOT EXISTS `{$table}_urls` (
-					`id` int(10) NOT NULL AUTO_INCREMENT,
-					`url` varchar(256) NOT NULL,
-					`yourl` varchar(256) NOT NULL,
-					PRIMARY KEY (`id`),
-					KEY `url` (`url`(255))
-					) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
-		$result =  $wpdb->query($sql);
-
-		if($result === false){
-			//echo '<br>'.$query.'<br>';
-			die('ошибка заполения '.$table);
-		}
-
+	if(count($res) == 0){
 		$sql = "INSERT INTO $table (id, clyc_yourls_domain, clyc_yourls_token, clyc_create_on_fly, clyc_domains) VALUES('%s', '%s', '%s', '%s', '%s')";
 		$query = $wpdb->prepare($sql, 1, '', '', 1, NULL);
 		$result = $wpdb->query($query);
+
 		if($result === false){
 			//echo '<br>'.$query.'<br>';
 			die('ошибка заполения '.$table);
 		}
+		add_option('clyc_installed', '0');// ключ для отметки что свойства YOURLS введены
+		add_option('clyc_dir', get_clyc_dir());
+	} else {
+		add_option('clyc_installed', '1');// ключ для отметки что свойства YOURLS введены
+		add_option('clyc_dir', get_clyc_dir());
 	}
-	// ключ для отметки что свойства YOURLS введены
-	add_option('clyc_installed', '0');
-	$clyc_dir =  get_clyc_dir();
-	add_option('clyc_dir', $clyc_dir);
+
+	// таблица для хранения преобразованных урлов
+	/*CREATE TABLE IF NOT EXISTS `wp_clyc_urls` (
+		`id` int(10) NOT NULL AUTO_INCREMENT,
+		`url` varchar(256) NOT NULL,
+		`yourl` varchar(256) NOT NULL,
+		PRIMARY KEY (`id`),
+		KEY `url` (`url`(255))
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+	*/
+	$sql = "CREATE TABLE IF NOT EXISTS {$table}_urls (
+				`id` int(10) NOT NULL AUTO_INCREMENT,
+				`url` varchar(256) NOT NULL,
+				`yourl` varchar(256) NOT NULL,
+				PRIMARY KEY (`id`),
+				KEY `url` (`url`(255))
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+	$result =  $wpdb->query($sql);
+
+	if($result === false){
+		//echo '<br>'.$query.'<br>';
+		die('ошибка заполения '.$table);
+	}
 }
 
 /**
  * Деактивацйия плагина
+ */
+function clyc_deactivate(){}
+
+/**
+ * Удаление плагина
  */
 function clyc_uninstall(){
 	global $wpdb;
@@ -82,26 +89,17 @@ function clyc_uninstall(){
 
 	$sql = "DROP TABLE IF EXISTS $table";
 	$wpdb->query($sql);
-	delete_option('clyc_dir');
-	delete_option('clyc_installed');
-}
 
-/**
- * Удаление плагина
- */
-function clyc_delete(){
-	global $wpdb;
-	$table = clyc_get_table();
-
-	$sql = "DROP TABLE IF EXISTS $table";
+	$sql = "DROP TABLE IF EXISTS {$table}_urls";
 	$wpdb->query($sql);
+
 	delete_option('clyc_dir');
 	delete_option('clyc_installed');
 }
 
 register_activation_hook(__FILE__, 'clyc_install');
-register_deactivation_hook(__FILE__, 'clyc_uninstall');
-register_uninstall_hook(__FILE__, 'clyc_delete');
+register_deactivation_hook(__FILE__, 'clyc_deactivate');
+register_uninstall_hook(__FILE__, 'clyc_uninstall');
 
 
 // подключаем обработку ссылок при сохранении контента на лету
