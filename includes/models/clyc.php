@@ -38,7 +38,6 @@ function clyc_get_options(){
 	$table = clyc_get_table();
 	$query = "SELECT * FROM $table WHERE id = '1'";
 	$result = $wpdb->get_results($query, ARRAY_A);
-	$result[0]['saved_urls'] = clyc_get_saved_urls();
 	return $result[0];
 }
 
@@ -68,7 +67,7 @@ function clyc_save_options($post){
 		}
 	//}
 
-	// сохраняем натсрйоки в БД
+	// сохраняем настрйоки в БД
 	global $wpdb;
 	$table = clyc_get_table();
 	// обрабатываем пустоту полей
@@ -156,39 +155,6 @@ function clyc_shortyfy_anchor_urls($text, $options, $onfly = FALSE) {
 }
 
 /**
- * get from DB pairs of saved before and shortyfied urls
- * using for not use YOURLS for links which was already shortyfied before
- * @return array of url => yourl pairs
- */
-function clyc_get_saved_urls(){
-	global $wpdb;
-	$table = clyc_get_table().'_urls';
-	$query = "SELECT * FROM {$table}";
-	$res = $wpdb->get_results($query, ARRAY_A);
-	$result = array();
-	foreach ($res as $row){
-		if ( ! isset($result[$row['url']])){
-			$result[$row['url']] = $row['yourl'];
-		}
-	}
-	return $result;
-}
-
-/**
- * Save to DB new url => yourl pair
- * @param $url
- * @param $yourl
- * @return false|int
- */
-function clyc_update_saved_urls($url, $yourl){
-	global $wpdb;
-	$table = clyc_get_table().'_urls';
-	$sql = "INSERT INTO $table (url, yourl) VALUES('%s', '%s')";
-	$query = $wpdb->prepare($sql, $url, $yourl);
-	return $wpdb->query($query);
-}
-
-/**
  * находит в переданном тексте урлы, сравнивает их со списком доменов из опций плагина
  * если находит среди ссылок домены - преобразует урлы с помощью clyc_shortify_url()
  *
@@ -198,17 +164,11 @@ function clyc_update_saved_urls($url, $yourl){
  * @return mixed
  */
 function clyc_shortyfy_text_urls($text, $options, $onfly = FALSE){
-	//echo '<br>text before';	echo $text;
-	$sUrls = $options['saved_urls'];
 	$domains = is_array($options['clyc_domains']) ? $options['clyc_domains'] : explode(',', $options['clyc_domains']);
 
 	$reg_exUrl = "/([\w]+:\/\/[\w-?&;#~=\.\/\@]+[\w\/])/i";
 	preg_match_all($reg_exUrl, $text, $matches);
 	$links = array_unique($matches[0]);
-
-	//echo '<br>$sUrls:';pp($sUrls);
-	//echo '<br>links from text:';pp($links);
-	//echo '<br>domains:';pp($domains);
 
 	$clycable = array();
 
@@ -217,7 +177,6 @@ function clyc_shortyfy_text_urls($text, $options, $onfly = FALSE){
 		if ( $url ){
 			$url = stripslashes ($url);
 		}
-		//echo '<br> $url:'.$url;
 		// checking founded urls on containing domains from options
 		foreach ($domains as $domain) {
 			$pos = strripos($url, trim($domain));
@@ -229,15 +188,8 @@ function clyc_shortyfy_text_urls($text, $options, $onfly = FALSE){
 				}
 				$cleanUrl = str_replace("www.", "", $cleanUrl);
 
-				// check if we shortyfied this url before
-				if (isset($sUrls[$cleanUrl])) {
-					$yourl = $sUrls[$cleanUrl];
-				} else {
-					// if not -getting new yourl
-					$yourl = clyc_shortify_url($cleanUrl, $options);
-					// save pair to DB
-					clyc_update_saved_urls($cleanUrl, $yourl);
-				}
+				// getting new yourl
+				$yourl = clyc_shortify_url($cleanUrl, $options);
 
 				$clycable[] =  array(
 						'url' => $url,
@@ -246,14 +198,11 @@ function clyc_shortyfy_text_urls($text, $options, $onfly = FALSE){
 			}
 		}
 	}
-	//echo '<br>$clycable:';pp($clycable);
 	foreach ($clycable as $pair){
-		//$pos = strripos($text, trim($pair['url']));
 		while (strripos($text, trim($pair['url']))) {
 			$text = str_replace($pair['url'], $pair['yourl'], $text);
 		}
 	}
-	//echo '<br>text after';
 	return $text;
 }
 
@@ -308,7 +257,6 @@ function clyc_analyse_contents() {
  * @return mixed
  */
 function clyc_shortify_link($url, $link, $options) {
-	$sUrls = $options['saved_urls'];
 	$yourl = $url;
 
 	$cleanUrl = $url;
@@ -317,17 +265,10 @@ function clyc_shortify_link($url, $link, $options) {
 	}
 	$cleanUrl = str_replace("www.", "", $cleanUrl);
 
-	// check if we shortyfied this url before
-	if (isset($sUrls[$cleanUrl])) {
-		$yourl = $sUrls[$cleanUrl];
-	} else {
-		// if not -getting new yourl
-		$data = clyc_send_yourls_curl($options['clyc_yourls_domain'], $options['clyc_yourls_token'], $cleanUrl);
-		if ( ! empty($data->shorturl)) {
-			$yourl = $data->shorturl;
-			// save pair to DB
-			clyc_update_saved_urls($url, $yourl);
-		}
+	//getting new yourl
+	$data = clyc_send_yourls_curl($options['clyc_yourls_domain'], $options['clyc_yourls_token'], $cleanUrl);
+	if ( ! empty($data->shorturl)) {
+		$yourl = $data->shorturl;
 	}
 
 	if ($url != $yourl) {

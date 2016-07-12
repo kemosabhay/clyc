@@ -23,7 +23,6 @@ $clyc_installed = get_option('clyc_installed');
 //} else {
 //	echo clyc_shortyfy_anchor_urls($page, $options, FALSE);
 //}
-
 ?>
 <script>
 	$j=jQuery.noConflict();
@@ -134,6 +133,9 @@ $clyc_installed = get_option('clyc_installed');
 		<h2>Before start please fill out YOURLS settings</h2>
 	<?php endif; ?>
 	<?=($message != '') ? "<h3>$message</h3>" : '';?>
+	<p>
+		Generates YOURLS links from links in content
+	</p>
 	<table width="100%">
 		<tr>
 			<td width="50%">
