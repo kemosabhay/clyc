@@ -26,6 +26,8 @@ $clyc_installed = get_option('clyc_installed');
 
 ?>
 <script>
+	$j=jQuery.noConflict();
+
 	/**
 	 * проверяет ваидность домена
 	 * @param str
@@ -46,10 +48,10 @@ $clyc_installed = get_option('clyc_installed');
 	 */
 	function addDomain() {
 		var message = ''; // error string
-		$('.clyc_domains_error').remove();
+		$j('.clyc_domains_error').remove();
 
 		// getting domain from input and clear trash
-		var domain = $('#add_domain').val();
+		var domain = $j('#add_domain').val();
 		domain = domain.toLowerCase();
 		if (domain.slice(-1) == '/' || domain.slice(-1) == ',') {
 			domain = domain.substring(0,domain.length-1);
@@ -76,34 +78,34 @@ $clyc_installed = get_option('clyc_installed');
 				url = url.replace("www.", "");
 
 				// check if domain is already in a list
-				var domains = $('#clyc_domains').val();
+				var domains = $j('#clyc_domains').val();
 				if (domains.indexOf(url) != -1){
 					message = 'This domain is already in a list';
 				} else {
 					var html ='<div class="clyc_domain_tag"><div class="clyc_domain_name">'+url+'</div><div class="clyc_domain_del"></div></div>';
-					$('#clyc_domain_container').append(html);
-					$('#clyc_domains').val(domains+','+url);
+					$j('#clyc_domain_container').append(html);
+					$j('#clyc_domains').val(domains+','+url);
 				}
 			} else {
 				message = 'Incorrect URL!';
 			}
 			if (message != ''){
-				$('.clyc_domains_td').prepend("<div class='clyc_domains_error'>"+message+"</div>");
+				$j('.clyc_domains_td').prepend("<div class='clyc_domains_error'>"+message+"</div>");
 				return false;
 			}
 		}
 		// clear input
-		$('#add_domain').val('');
+		$j('#add_domain').val('');
 	}
 
-	$( document ).ready(function() {
+	$j( document ).ready(function() {
 		/**
 		 * обработчики клика по плюсу и клавиши ENTER в в поле добавления домена
 		 */
-		$( "#add_domain_btn" ).on('click', function() {
+		$j( "#add_domain_btn" ).on('click', function() {
 			addDomain();
 		});
-		$('#add_domain').on('keypress', function(e) {
+		$j('#add_domain').on('keypress', function(e) {
 			var keyCode = e.keyCode || e.which;
 			if (keyCode === 13) {
 				e.preventDefault();
@@ -115,14 +117,14 @@ $clyc_installed = get_option('clyc_installed');
 		/**
 		 * Удаление домена из списка
 		 */
-		$(document).on('click', ".clyc_domain_del", function() {
-			var domain = $(this).siblings('.clyc_domain_name').html();
-			var domains = $('#clyc_domains').val();
+		$j(document).on('click', ".clyc_domain_del", function() {
+			var domain = $j(this).siblings('.clyc_domain_name').html();
+			var domains = $j('#clyc_domains').val();
 			domains = domains.replace(domain+',', "");
 			domains = domains.replace(','+domain, "");
 
-			$('#clyc_domains').val(domains);
-			$(this).parent('.clyc_domain_tag').remove();
+			$j('#clyc_domains').val(domains);
+			$j(this).parent('.clyc_domain_tag').remove();
 		});
 	});
 </script>
