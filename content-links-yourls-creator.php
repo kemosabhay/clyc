@@ -1,11 +1,11 @@
 <?php
+
 /*
 Plugin Name: Content links YOURLS creator
 Plugin URI:
-Description: Generates YOURLS links from links in content.
+Description: Generates YOURLS links from links in content. Allows to shrotify urls from texts, and urls from anchor tags. Allows shortening of multiple URLs with use <a href='https://github.com/tdakanalis/bulk_api_bulkshortener'>Bulk URL shortener</a> plugin
 Version: 0.3
 */
-
 include_once('includes/models/clyc.php');
 define( 'CLYC_VERSION', '0.1' );
 define( 'CLYC_URL', plugin_dir_url( __FILE__ ) );
@@ -48,6 +48,7 @@ function clyc_install(){
 			die('Insert error for '.$table);
 		}
 		add_option('clyc_installed', '0');// means if YOURLS settings set
+		add_option('clyc_instaslled', '0');// means if YOURLS settings set
 		add_option('clyc_dir', get_clyc_dir());
 	} else {
 		//re-activation
@@ -119,12 +120,7 @@ function clyc_pre_analyse_content($content){
 	// если задано в условиях - преобразуем ссылки
 	if ($options['clyc_create_on_fly'] == 1) {
 		$options['clyc_domains'] = explode(',', $options['clyc_domains']);
-
-		if($options['clyc_shorten_link_types'] == 'all'){
-			return  clyc_shortyfy_text_urls($content, $options, TRUE);
-		} else {
-			return  clyc_shortyfy_anchor_urls($content, $options, TRUE);
-		}
+		return  clyc_shortyfy_urls($content, $options, TRUE);
 	} else {
 		return $content;
 	}

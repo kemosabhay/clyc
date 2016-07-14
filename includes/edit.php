@@ -18,11 +18,8 @@ $clyc_domains = ( ! empty($options['clyc_domains'])) ? explode(',', $options['cl
 $clyc_installed = get_option('clyc_installed');
 
 //$page = 'Добро пожаловать в http://linux.net/ WordPress. Это ваша первая <a href="https://www.turbobit.net/im60ahdbeluq.html">https://www.turbobit.net/im60ahdbeluq.html</a> запись. Отредактируйте или удалите <a href="http://yandex.ru/">http://yandex.ru/</a>её, затем  https://raka.rak пишите! <a href="http://waper.ru">http://waper.ru</a> ';
-//if($options['clyc_shorten_link_types'] == 'all'){
-//	echo clyc_shortyfy_text_urls($page, $options, FALSE);
-//} else {
-//	echo clyc_shortyfy_anchor_urls($page, $options, FALSE);
-//}
+//pp($page);
+//pp(clyc_shortyfy_urls($page, $options, true));
 ?>
 <script>
 	$j=jQuery.noConflict();
@@ -134,7 +131,8 @@ $clyc_installed = get_option('clyc_installed');
 	<?php endif; ?>
 	<?=($message != '') ? "<h3>$message</h3>" : '';?>
 	<p>
-		Generates YOURLS links from links in content
+		Generates YOURLS links from links in content. Allows to shrotify urls from texts, and urls from anchor tags.<br>
+		Allows shortening of multiple URLs with use <a href='https://github.com/tdakanalis/bulk_api_bulkshortener'>Bulk URL shortener</a> plugin (it must be installed on your YOURLS server).
 	</p>
 	<table width="100%">
 		<tr>
