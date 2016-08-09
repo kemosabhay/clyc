@@ -118,11 +118,13 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 		}
 		// getting yourls for our urls
 		$shorten_urls = clyc_get_yourls($clycable, $options);
-		//pp($shorten_urls);
+		//var_dump($shorten_urls);
 
 		foreach ($shorten_urls as $pair){
-			while (strripos($text, trim_string($pair['url']))) {
-				$text = str_replace($pair['url'], $pair['yourl'], $text);
+			if( ! empty($pair['url']) AND ! empty($pair['yourl'])){
+				while (strripos($text, trim_string($pair['url']))) {
+					$text = str_replace($pair['url'], ' '.$pair['yourl'].' ', $text);
+				}
 			}
 		}
 	} else {
@@ -160,6 +162,7 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 		}
 		// getting yourls for our urls
 		$shorten_urls = clyc_get_yourls($clycable, $options);
+		//var_dump($shorten_urls);
 
 		// replacing inside links url to yourls
 		foreach($links as $anchor){
@@ -179,7 +182,7 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 						$link = str_replace("href=".$pair['url'], "href=".$pair['yourl'], $link);
 					} else {
 						// replace href and text of anchor
-						$link = str_replace($pair['url'], $pair['yourl'], $anchor);
+						$link = str_replace($pair['url'], ' '.$pair['yourl'].' ', $anchor);
 					}
 					//getting array of new anchors
 					$new_links[] = $link;
@@ -219,7 +222,7 @@ function clyc_get_yourls($clycable, $options) {
 			'urls' => $urls
 	);
 	$url = $options['clyc_yourls_domain'].'/yourls-api.php' . '?' . http_build_query($params);
-
+	//echo '$url:'.$url;
 	// Init the CURL session
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $url);
