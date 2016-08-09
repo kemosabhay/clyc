@@ -17,8 +17,12 @@ $options = clyc_get_options();
 $clyc_domains = ( ! empty($options['clyc_domains'])) ? explode(',', $options['clyc_domains']) : array();
 $clyc_installed = get_option('clyc_installed');
 
-//$page = 'Добро пожаловать в http://linux.net/ WordPress. Это ваша первая <a href="https://www.turbobit.net/im60ahdbeluq.html">https://www.turbobit.net/im60ahdbeluq.html</a> запись. Отредактируйте или удалите <a href="http://yandex.ru/">http://yandex.ru/</a>её, затем  https://raka.rak пишите! <a href="http://waper.ru">http://waper.ru</a> ';
+//$page = 'Добро пожаловать в http://linux.net/ WordPress. Это http://rapidgator.net/file/7642c54d2f79582797198f0d850461fe/[FemJoy]_-_2009-07-10_-_Melinda_-_She_And_The_Sky_(x89).rar.html ваша первая <a href="https://www.turbobit.net/im60ahdbeluq.html">https://www.turbobit.net/im60ahdbeluq.html</a> запись. Отредактируйте или удалите <a href="http://yandex.ru/">http://yandex.ru/</a>её, затем  https://raka.rak пишите! <a href="http://waper.ru">http://waper.ru</a>';
 //pp($page);
+//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
+//preg_match_all($reg_exUrl, $page, $matches);
+//$links = array_unique($matches[0]);
+//var_dump($links);
 //pp(clyc_shortyfy_urls($page, $options, true));
 ?>
 <script>

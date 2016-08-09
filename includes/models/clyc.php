@@ -90,7 +90,8 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 		$clycable = array(); // array container of urls and their yourls
 
 		// getting all of links
-		$reg_exUrl = "/([\w]+:\/\/[\w-?&;#~=\.\/\@]+[\w\/])/i";
+		//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#~=\.\/\@]+[\w\/])/i";
+		$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
 		preg_match_all($reg_exUrl, $text, $matches);
 		$links = array_unique($matches[0]);
 
@@ -254,6 +255,20 @@ function clyc_get_yourls($clycable, $options) {
 		}
 	}
 	return $clycable;
+}
+/**
+ * getting new YOURL for url link
+ * @param $url
+ * @param $options
+ * @return mixed
+ */
+function clyc_shortify_url($url, $options) {
+	$data = clyc_send_yourls_curl($options['clyc_yourls_domain'], $options['clyc_yourls_token'], $url);
+	$link = $url;
+	if ( ! empty($data->shorturl)) {
+		$link = $data->shorturl;
+	}
+	return $link;
 }
 
 /**
