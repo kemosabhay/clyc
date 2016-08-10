@@ -82,7 +82,9 @@ function clyc_save_options($post){
  * @return mixed
  */
 function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
-
+	//echo '<textarea style="height: 252px;" cols="200" rows="200">';
+	//pp(stripslashes($text));
+	//echo '</textarea>';
 	// getting domains
 	$domains = is_array($options['clyc_domains']) ? $options['clyc_domains'] : explode(',', $options['clyc_domains']);
 
@@ -91,19 +93,20 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 		/** 1 step -- getting URLS from HREF attrs - symbols including  spaces **/
 		// searching links
 		//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
+
+		//if we are updating text onfly - clear framed slashes
+		if ($onfly){
+			$text = stripslashes ($text);
+		}
+
 		$reg_exUrl = '/href=(\'|\")((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9 \(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9 +\(\)\[\]&@#\/%=~_|])(\'|\")/i';
 		preg_match_all($reg_exUrl, $text, $matches);
 		$links = array_unique($matches[0]);
-		//var_dump($links);
+		var_dump($links);
 
 		$i=0;
 		$clycable = array(); // array container of urls and their yourls
 		foreach($links as $url){
-			// if we are updating text onfly - clear framed slashes
-			if ($onfly){
-				$url = stripslashes ($url);
-			}
-
 			// remove href frames
 			$url = str_replace('href="', '', $url);
 			$url = str_replace("href='", '', $url);
@@ -135,7 +138,7 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 		foreach ($shorten_urls as $pair){
 			if( ! empty($pair['url']) AND ! empty($pair['yourl'])){
 				while (strripos($text, trim_string($pair['url']))) {
-					$text = str_replace($pair['url'], ' '.$pair['yourl'].' ', $text);
+					$text = str_replace($pair['url'], $pair['yourl'], $text);
 				}
 			}
 		}
@@ -193,7 +196,7 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 		foreach ($shorten_urls2 as $pair){
 			if( ! empty($pair['url']) AND ! empty($pair['yourl'])){
 				while (strripos($text, trim_string($pair['url']))) {
-					$text = str_replace($pair['url'], ' '.$pair['yourl'].' ', $text);
+					$text = str_replace($pair['url'], $pair['yourl'], $text);
 				}
 			}
 		}
@@ -257,7 +260,7 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 						$link = str_replace("href=".$pair['url'], "href=".$pair['yourl'], $link);
 					} else {
 						// replace href and text of anchor
-						$link = str_replace($pair['url'], ' '.$pair['yourl'].' ', $anchor);
+						$link = str_replace($pair['url'], $pair['yourl'], $anchor);
 					}
 					//getting array of new anchors
 					$new_links[] = $link;
