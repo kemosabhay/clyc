@@ -17,13 +17,15 @@ $options = clyc_get_options();
 $clyc_domains = ( ! empty($options['clyc_domains'])) ? explode(',', $options['clyc_domains']) : array();
 $clyc_installed = get_option('clyc_installed');
 
-//$page = 'Добро пожаловать в http://linux.net/ WordPress. Это http://rapidgator.net/file/7642c54d2f79582797198f0d850461fe/[FemJoy]_-_2009-07-10_-_Melinda_-_She_And_The_Sky_(x89).rar.html ваша первая <a href="https://www.turbobit.net/im60ahdbeluq.html">https://www.turbobit.net/im60ahdbeluq.html</a> запись. Отредактируйте или удалите <a href="http://yandex.ru/">http://yandex.ru/</a>её, затем  https://raka.rak пишите! <a href="http://waper.ru">http://waper.ru</a>';
-//pp($page);
-//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
-//preg_match_all($reg_exUrl, $page, $matches);
-//$links = array_unique($matches[0]);
-//var_dump($links);
-//pp(clyc_shortyfy_urls($page, $options, true));
+//$text = 'abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ
+//0123456789 +-.,!@#$%^&*();\/|<>"\' 12345 -98.7 3.141 .6180 9,000 +42 555.123.4567	+1-(800)-555-2468 foo@demo.net	bar.ba@test.co.uk www.demo.com	http://foo.co.uk/ http://regexr.com/foo.html?q=bar fa moo moo.com fa moo moo.co.uk da moo[dot]com doo moo [dot] com and not moo.c0m but do moo.cc and moo.co0uk
+//www.example.com/hello.html?ho#t-t_hy sdf http://regexr.com/ http://localhost:5000/#/tl/myteam www.home4.com http://localhost:5000
+//Добро пожаловать в http://linux.net/ WordPress.<br>Это http://rapidgator.net/file/7642c54d2f79582797198f0d850461fe/[FemJoy]_-_2009-07-10_-_Melinda_-_She_And_The_Sky_(x89).rar.html ваша первая <a href=\'https://www.turbobit.net/im60ahdbeluq.html\'>https://www.turbobit.net/im60ahdbeluq.html</a><br> запись. Отредактируйте или удалите <a href="http://www.yandex.ru/">http://yandex.ru/</a>её, затем  https://raka.rak пишите! <a href="www.example.com/hello.html?ho#t-t_hy">www.example.com/hello.html?ho#t-t_hy</a> <a href="http://waper.ru">http://waper.ru</a> <a rel="external noopener noreferrer" target="_blank" data-wpel-link="external" href="http://www.datafile.com/d/TWpBeU16VTBORFUF9/Pregnantmary 1.mp4">Pregnantmary 1.mp4</a> <a rel="external noopener noreferrer" target="_blank" data-wpel-link="external" href="http://www.datafile.com/d/TWpBeU16VTBNelkF9/Pregnantmary 10.mp4">Pregnantmary 10.mp4</a> <a rel="external noopener noreferrer" target="_blank" data-wpel-link="external" href="http://www.datafile.com/d/TWpBeU16VTBNalEF9/Pregnantmary 11.mp4">Pregnantmary 11.mp4</a>';
+//
+//pp($text);echo '<textarea style="height: 252px;" cols="200" rows="200">';pp(htmlspecialchars($text));echo '</textarea>';
+//
+//$ntext = clyc_shortyfy_urls($text, $options);
+//pp($ntext);echo '<textarea style="height: 252px;" cols="200" rows="200">';pp(htmlspecialchars($ntext));echo '</textarea>';
 ?>
 <script>
 	$j=jQuery.noConflict();

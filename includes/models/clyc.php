@@ -87,25 +87,31 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 	$domains = is_array($options['clyc_domains']) ? $options['clyc_domains'] : explode(',', $options['clyc_domains']);
 
 	if ($options['clyc_shorten_link_types'] == 'all'){
-		$clycable = array(); // array container of urls and their yourls
 
-		// getting all of links
-		//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#~=\.\/\@]+[\w\/])/i";
-		$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
+		/** 1 step -- getting URLS from HREF attrs - symbols including  spaces **/
+		// searching links
+		//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
+		$reg_exUrl = '/href=(\'|\")((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9 \(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9 +\(\)\[\]&@#\/%=~_|])(\'|\")/i';
 		preg_match_all($reg_exUrl, $text, $matches);
 		$links = array_unique($matches[0]);
+		//var_dump($links);
 
-		// updating links
+		$i=0;
+		$clycable = array(); // array container of urls and their yourls
 		foreach($links as $url){
 			// if we are updating text onfly - clear framed slashes
 			if ($onfly){
 				$url = stripslashes ($url);
 			}
 
+			// remove href frames
+			$url = str_replace('href="', '', $url);
+			$url = str_replace("href='", '', $url);
+			$url = substr_replace($url, "", -1);
+
 			// checking founded urls on containing domains from options
 			foreach ($domains as $domain) {
 				$pos = strripos($url, trim_string($domain));
-
 				if ($pos !== false) {
 					// if url contains domain - changing it
 					$cleanUrl = clyc_clean_url($url);
@@ -116,11 +122,16 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 					);
 				}
 			}
+			//$link = str_replace($url, "%url-$i%", $link);
+			$i++;
 		}
+		//var_dump($clycable);
+
 		// getting yourls for our urls
 		$shorten_urls = clyc_get_yourls($clycable, $options);
 		//var_dump($shorten_urls);
 
+		// replacing urls
 		foreach ($shorten_urls as $pair){
 			if( ! empty($pair['url']) AND ! empty($pair['yourl'])){
 				while (strripos($text, trim_string($pair['url']))) {
@@ -128,18 +139,80 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 				}
 			}
 		}
+		//pp($text);
+		//echo '<textarea style="height: 252px;" cols="200" rows="200">';
+		//pp(htmlspecialchars($text));
+		//echo '</textarea>';
+		//echo '<hr>';
+
+		/** 2 step -- getting othres URLS **/
+
+		//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
+		$reg_exUrl2 = '/((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9\(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9+\(\)\[\]&@#\/%=~_|])/i';
+
+		preg_match_all($reg_exUrl2, $text, $matches2);
+		$links2 = array_unique($matches2[0]);
+		//echo '$links2:';
+		//var_dump($links2);
+
+		$i=0;
+		$clycable2 = array(); // array container of urls and their yourls
+		foreach($links2 as $url){
+			// if we are updating text onfly - clear framed slashes
+			if ($onfly){
+				$url = stripslashes ($url);
+			}
+			// remove href frames
+			//$url = str_replace('href="', '', $link);
+			//$url = str_replace("href='", '', $url);
+			//$url = substr_replace($url, "", -1);
+
+			// checking founded urls on containing domains from options
+			foreach ($domains as $domain) {
+				$pos = strripos($url, trim_string($domain));
+				if ($pos !== false) {
+					// if url contains domain - changing it
+					$cleanUrl = clyc_clean_url($url);
+					$clycable2[] =  array(
+							'url' => $url,
+							'clean' => $cleanUrl,
+							'yourl' => ''
+					);
+				}
+			}
+			//$link = str_replace($url, "%url-$i%", $link);
+			$i++;
+		}
+		//echo '$clycable2:';
+		//var_dump($clycable2);
+
+		// getting yourls for our urls
+		$shorten_urls2 = clyc_get_yourls($clycable2, $options);
+		//var_dump($shorten_urls2);
+
+		foreach ($shorten_urls2 as $pair){
+			if( ! empty($pair['url']) AND ! empty($pair['yourl'])){
+				while (strripos($text, trim_string($pair['url']))) {
+					$text = str_replace($pair['url'], ' '.$pair['yourl'].' ', $text);
+				}
+			}
+		}
+
+		//pp($text2);
+		//echo '<textarea style="height: 252px;" cols="200" rows="200">';
+		//pp(htmlspecialchars($text2));
+		//echo '</textarea>';
 	} else {
 		$clycable = array(); // array container of urls and their yourls
 		$new_links = array(); // array of final links
 
 		// getting <a> links from text
-		$reg_exUrl = '/<a ([\r\n\w+\W+].*?)>([\r\n\w+\W+].*?)<\/a>/';
+		$reg_exUrl = "/<a ([\r\n\w+\W+].*?)>([\r\n\w+\W+].*?)<\/a>/i";
 		preg_match_all($reg_exUrl, $text, $matches);
 		$links = array_unique($matches[0]);
 
 		// updating links
 		foreach($links as $url){
-
 			// if we are updating text onfly - clear framed slashes
 			if ($onfly){
 				$url = stripslashes ($url);
@@ -163,17 +236,18 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 		}
 		// getting yourls for our urls
 		$shorten_urls = clyc_get_yourls($clycable, $options);
+		//var_dump($links);
 		//var_dump($shorten_urls);
 
 		// replacing inside links url to yourls
 		foreach($links as $anchor){
+
 			foreach ($shorten_urls as $pair){
 				$pos = strripos(trim_string($anchor),$pair['url']);
 				// if anchor contains url
 				if ($pos !== false) {
 					if ($options['clyc_shorten_link_types'] == 'hrefs') {
 						// replace only href url
-
 						if ($onfly){
 							$anchor = stripslashes ($anchor);
 						}
@@ -190,8 +264,9 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 				}
 			}
 		}
+		//var_dump($new_links);
 		// replacing old anchors to new
-		for($i=0; $i< count($new_links)-1; $i++){
+		for($i=0; $i<count($new_links); $i++){
 			$text = str_replace($links[$i], $new_links[$i], $text);
 		}
 	}
