@@ -95,6 +95,17 @@ register_uninstall_hook(__FILE__, 'clyc_uninstall');
 
 // подключаем обработку ссылок при сохранении контента на лету
 add_filter('content_save_pre', 'clyc_pre_analyse_content');
+	
+function my_mce_buttons_2( $buttons ) {
+	/**
+	 * Add in a core button that's disabled by default
+	 */
+
+	//$buttons[] = 'superscript';
+	//$buttons[] = 'subscript';
+	return $buttons;
+}
+add_filter( 'mce_buttons_2', 'my_mce_buttons_2' );
 
 /**
  * Register style sheet.

@@ -102,7 +102,7 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 		$reg_exUrl = '/href=(\'|\")((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9 \(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9 +\(\)\[\]&@#\/%=~_|])(\'|\")/i';
 		preg_match_all($reg_exUrl, $text, $matches);
 		$links = array_unique($matches[0]);
-		var_dump($links);
+		//var_dump($links);
 
 		$i=0;
 		$clycable = array(); // array container of urls and their yourls
