@@ -120,6 +120,29 @@ function clyc_style() {
 }
 add_action( 'admin_enqueue_scripts', 'clyc_style');
 
+//print_r($_GET);
+/**
+ * Add admin notice when YOURLS server is not avalable in post saving process
+ * TODO try to include inside filter
+ */
+function yourls_admin_notice() {
+	//инициализируем проверку доступности yourls при редактировании поста
+	if (isset($_GET['post']) AND isset($_GET['action']) and $_GET['action'] == 'edit' AND isset($_GET['message']) AND $_GET['message'] != '') {
+		$options = clyc_get_options();
+		// проверяем доступность YOURLS сервера
+		$data = clyc_send_yourls_curl($options['clyc_yourls_domain'], $options['clyc_yourls_token'], 'http://yandex.ru');
+		// если получен ответ - пробуем преобразовать текст
+		if ( ! empty($data->shorturl)) {
+			return;
+		} else {
+			$class = 'notice notice-error is-dismissible';
+			$message = __('<b>Warning!</b> YOURLS server is not available. Links did not shortified.', 'sample-text-domain');
+			printf('<div class="%1$s"><p>%2$s</p></div>', $class, $message);
+		}
+	}
+	return;
+}
+add_action( 'admin_notices', 'yourls_admin_notice' );
 
 /**
  * анализирует и преобразует ссылки контента перед его сохранением в БД
@@ -128,11 +151,21 @@ add_action( 'admin_enqueue_scripts', 'clyc_style');
  */
 function clyc_pre_analyse_content($content){
 	$options = clyc_get_options();
-	// если задано в условиях - преобразуем ссылки
-	if ($options['clyc_create_on_fly'] == 1) {
-		$options['clyc_domains'] = explode(',', $options['clyc_domains']);
-		return  clyc_shortyfy_urls($content, $options, TRUE);
+
+	// проверяем доступность YOURLS сервера
+	$data = clyc_send_yourls_curl($options['clyc_yourls_domain'], $options['clyc_yourls_token'], 'http://yandex.ru');
+
+	// если получен ответ - пробуем преобразовать текст
+	if ( ! empty($data->shorturl)) {
+		// если задано в условиях - преобразуем ссылки
+		if ($options['clyc_create_on_fly'] == 1) {
+			$options['clyc_domains'] = explode(',', $options['clyc_domains']);
+			return  clyc_shortyfy_urls($content, $options, TRUE);
+		} else {
+			return $content;
+		}
 	} else {
+		//return  '<span class="error">Incorrect YOURLS settings!</span>';
 		return $content;
 	}
 }
