@@ -55,6 +55,7 @@ function clyc_save_options($post){
 		$post['clyc_create_on_fly'] =  0;
 	}
 	$post['clyc_domains'] = isset($post['clyc_domains']) ? trim_string($post['clyc_domains']) : NULL;
+	$post['clyc_shorten_link_types'] = isset($post['clyc_shorten_link_types']) ? trim_string($post['clyc_shorten_link_types']) : 'all';
 
 	$sql = "UPDATE $table SET clyc_yourls_domain='%s', clyc_yourls_token='%s', clyc_create_on_fly='%s', clyc_domains='%s', clyc_shorten_link_types='%s' WHERE id = 1";
 	$query = $wpdb->prepare($sql, $post['clyc_yourls_domain'], $post['clyc_yourls_token'], $post['clyc_create_on_fly'], $post['clyc_domains'], $post['clyc_shorten_link_types']);
