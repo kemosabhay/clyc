@@ -4,34 +4,21 @@ include_once('models/clyc.php');
 // обрабатываем сабмит формы
 $message = '';
 if ( ! empty($_POST)) {
-	//pp($_POST);
 	if (isset($_POST['clyc_save_options'])) {
 		$message = clyc_save_options($_POST);
-	} /*elseif(isset($_POST['clyc_analyse_contents'])) {
-		$message = clyc_analyse_contents();
-	}*/
+	}
 }
 
 // получаем настройки плагина
 $options = clyc_get_options();
 $clyc_domains = ( ! empty($options['clyc_domains'])) ? explode(',', $options['clyc_domains']) : array();
 $clyc_installed = get_option('clyc_installed');
-
-//$text = 'abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ
-//0123456789 +-.,!@#$%^&*();\/|<>"\' 12345 -98.7 3.141 .6180 9,000 +42 555.123.4567	+1-(800)-555-2468 foo@demo.net	bar.ba@test.co.uk www.demo.com	http://foo.co.uk/ http://regexr.com/foo.html?q=bar fa moo moo.com fa moo moo.co.uk da moo[dot]com doo moo [dot] com and not moo.c0m but do moo.cc and moo.co0uk
-//www.example.com/hello.html?ho#t-t_hy sdf http://regexr.com/ http://localhost:5000/#/tl/myteam www.home4.com http://localhost:5000
-//Добро пожаловать в http://linux.net/ WordPress.<br>Это http://rapidgator.net/file/7642c54d2f79582797198f0d850461fe/[FemJoy]_-_2009-07-10_-_Melinda_-_She_And_The_Sky_(x89).rar.html ваша первая <a href=\'https://www.turbobit.net/im60ahdbeluq.html\'>https://www.turbobit.net/im60ahdbeluq.html</a><br> запись. Отредактируйте или удалите <a href="http://www.yandex.ru/">http://yandex.ru/</a>её, затем  https://raka.rak пишите! <a href="www.example.com/hello.html?ho#t-t_hy">www.example.com/hello.html?ho#t-t_hy</a> <a href="http://waper.ru">http://waper.ru</a> <a rel="external noopener noreferrer" target="_blank" data-wpel-link="external" href="http://www.datafile.com/d/TWpBeU16VTBORFUF9/Pregnantmary 1.mp4">Pregnantmary 1.mp4</a> <a rel="external noopener noreferrer" target="_blank" data-wpel-link="external" href="http://www.datafile.com/d/TWpBeU16VTBNelkF9/Pregnantmary 10.mp4">Pregnantmary 10.mp4</a> <a rel="external noopener noreferrer" target="_blank" data-wpel-link="external" href="http://www.datafile.com/d/TWpBeU16VTBNalEF9/Pregnantmary 11.mp4">Pregnantmary 11.mp4</a>';
-//
-//pp($text);echo '<textarea style="height: 252px;" cols="200" rows="200">';pp(htmlspecialchars($text));echo '</textarea>';
-//
-//$ntext = clyc_shortyfy_urls($text, $options);
-//pp($ntext);echo '<textarea style="height: 252px;" cols="200" rows="200">';pp(htmlspecialchars($ntext));echo '</textarea>';
 ?>
 <script>
-	$j=jQuery.noConflict();
+	$jq=jQuery.noConflict();
 
 	/**
-	 * проверяет ваидность домена
+	 * проверяет валидность домена
 	 * @param str
 	 * @returns {boolean}
 	 */
@@ -50,10 +37,10 @@ $clyc_installed = get_option('clyc_installed');
 	 */
 	function addDomain() {
 		var message = ''; // error string
-		$j('.clyc_domains_error').remove();
+		$jq('.clyc_domains_error').remove();
 
 		// getting domain from input and clear trash
-		var domain = $j('#add_domain').val();
+		var domain = $jq('#add_domain').val();
 		domain = domain.toLowerCase();
 		if (domain.slice(-1) == '/' || domain.slice(-1) == ',') {
 			domain = domain.substring(0,domain.length-1);
@@ -80,34 +67,34 @@ $clyc_installed = get_option('clyc_installed');
 				url = url.replace("www.", "");
 
 				// check if domain is already in a list
-				var domains = $j('#clyc_domains').val();
+				var domains = $jq('#clyc_domains').val();
 				if (domains.indexOf(url) != -1){
 					message = 'This domain is already in a list';
 				} else {
 					var html ='<div class="clyc_domain_tag"><div class="clyc_domain_name">'+url+'</div><div class="clyc_domain_del"></div></div>';
-					$j('#clyc_domain_container').append(html);
-					$j('#clyc_domains').val(domains+','+url);
+					$jq('#clyc_domain_container').append(html);
+					$jq('#clyc_domains').val(domains+','+url);
 				}
 			} else {
 				message = 'Incorrect URL!';
 			}
 			if (message != ''){
-				$j('.clyc_domains_td').prepend("<div class='clyc_domains_error'>"+message+"</div>");
+				$jq('.clyc_domains_td').prepend("<div class='clyc_domains_error'>"+message+"</div>");
 				return false;
 			}
 		}
 		// clear input
-		$j('#add_domain').val('');
+		$jq('#add_domain').val('');
 	}
 
-	$j( document ).ready(function() {
+	$jq( document ).ready(function() {
 		/**
 		 * обработчики клика по плюсу и клавиши ENTER в в поле добавления домена
 		 */
-		$j( "#add_domain_btn" ).on('click', function() {
+		$jq( "#add_domain_btn" ).on('click', function() {
 			addDomain();
 		});
-		$j('#add_domain').on('keypress', function(e) {
+		$jq('#add_domain').on('keypress', function(e) {
 			var keyCode = e.keyCode || e.which;
 			if (keyCode === 13) {
 				e.preventDefault();
@@ -119,14 +106,14 @@ $clyc_installed = get_option('clyc_installed');
 		/**
 		 * Удаление домена из списка
 		 */
-		$j(document).on('click', ".clyc_domain_del", function() {
-			var domain = $j(this).siblings('.clyc_domain_name').html();
-			var domains = $j('#clyc_domains').val();
+		$jq(document).on('click', ".clyc_domain_del", function() {
+			var domain = $jq(this).siblings('.clyc_domain_name').html();
+			var domains = $jq('#clyc_domains').val();
 			domains = domains.replace(domain+',', "");
 			domains = domains.replace(','+domain, "");
 
-			$j('#clyc_domains').val(domains);
-			$j(this).parent('.clyc_domain_tag').remove();
+			$jq('#clyc_domains').val(domains);
+			$jq(this).parent('.clyc_domain_tag').remove();
 		});
 	});
 </script>

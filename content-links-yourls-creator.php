@@ -1,5 +1,4 @@
 <?php
-
 /*
 Plugin Name: Content links YOURLS creator
 Plugin URI:
@@ -96,17 +95,6 @@ register_uninstall_hook(__FILE__, 'clyc_uninstall');
 // подключаем обработку ссылок при сохранении контента на лету
 add_filter('content_save_pre', 'clyc_pre_analyse_content');
 
-//function my_mce_buttons_2( $buttons ) {
-//	/**
-//	 * Add in a core button that's disabled by default
-//	 */
-//
-//	//$buttons[] = 'superscript';
-//	//$buttons[] = 'subscript';
-//	return $buttons;
-//}
-//add_filter( 'mce_buttons_2', 'my_mce_buttons_2' );
-
 /**
  * Register style sheet.
  */
@@ -120,10 +108,8 @@ function clyc_style() {
 }
 add_action( 'admin_enqueue_scripts', 'clyc_style');
 
-//print_r($_GET);
 /**
  * Add admin notice when YOURLS server is not avalable in post saving process
- * TODO try to include inside filter
  */
 function yourls_admin_notice() {
 	//инициализируем проверку доступности yourls при редактировании поста

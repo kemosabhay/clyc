@@ -16,20 +16,15 @@ function clyc_get_options(){
 	$table = clyc_get_table();
 	$query = "SELECT * FROM $table WHERE id = '1'";
 	$result = $wpdb->get_results($query, ARRAY_A);
-	return $result[0];
+	return ( ! empty($result[0])) ? $result[0] : FALSE;
 }
 
 /**
  * сохраняет настройки плагина
- * TODO добавить проверки данных
- * TODO добавить проверку данных YOURLS -- ПРИВЕСТИ В УДОБНЫЙ ВИМД
  * @param $post - массив $_POST
  * @return bool
  */
 function clyc_save_options($post){
-	// обрабатываем первоначальную настройку плагина
-	//$clyc_installed = get_option('clyc_installed');
-	//if($clyc_installed == 0) {
 	// елси получены YOURLS данные - пробуем сделать тестовое преобразование урла
 	if ( ! empty($post['clyc_yourls_domain']) AND ! empty($post['clyc_yourls_token']) ){
 		$data = clyc_send_yourls_curl($post['clyc_yourls_domain'], $post['clyc_yourls_token'], 'http://yandex.ru');
@@ -43,7 +38,6 @@ function clyc_save_options($post){
 	} else {
 		return  '<span class="error">Incorrect YOURLS settings!</span>';
 	}
-	//}
 
 	// сохраняем настрйоки в БД
 	global $wpdb;
@@ -69,6 +63,7 @@ function clyc_save_options($post){
 	return '<span class="success">Settings successfully changed!</span>';
 }
 
+
 /**
  * Getting anchors in text, based on domains list from options,
  * replacing urls with yourls
@@ -83,232 +78,218 @@ function clyc_save_options($post){
  * @return mixed
  */
 function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
-	//echo '<textarea style="height: 252px;" cols="200" rows="200">';
-	//pp(stripslashes($text));
-	//echo '</textarea>';
-	// getting domains
+	// массив-контейнер для урлов, их hash, чистых форм и yourl-аналогов
+	$elements = array();
+
+	/**
+	 * $elements[] =  array(
+		'type' - тип элемента: url - урл, который нужно обработать, buff - буферный элемент, сокращению не подлежит
+		'needY' - булев ключ, нужно ли получить для ссылки yourl - елси TRUE -  ссылка содержит домен из настроек, нужно сокращать
+		'elem' - html или и bbcode - кусок, полученный регуляркой из текста
+		'hash' - хэш на который мы заменили элемнет в тексте (потом по этим хэшам буду вставляться боратно либо yourls ссылки либо элементы без изменений)
+		'clean' - чистая версия урла, без www и лишних слешей - оригинальный урл, котрый мы отдаём на обработку в yourls
+		'yourl' - yourl-версия урла
+	);*/
+
+	// если работаем "на лету" очищаем заэкранированные символы
+	if ($onfly){
+		$text = stripslashes ($text);
+	}
+
+	/** #1 собираем в массив элементы которые не нужно менять (<img> and [img]). Меняем их в тексте на хэши */
+	$images = array();
+	//html-картинки
+	preg_match_all('/<img[^>]+>/i',$text, $result);
+	foreach($result[0] as $img) {
+		$images[] = $img;
+	}
+	//bbcode-картинки
+	preg_match_all("/\[img\](.+?)\[\/img\]/i",$text, $result);
+	foreach($result[0] as $img) {
+		$images[] = $img;
+	}
+
+	// меняем в тексте на хэши
+	$i=0;
+	foreach ($images as $img) {
+		$hash = '%img_'.$i.'%';
+		$text = str_replace($img, $hash, $text);
+
+		// добавляю элементы в массив
+		$elements[] =  array(
+			'type'  => 'buff',
+			'needY'  => FALSE,
+			'elem'  => $img,
+			'hash'  => $hash,
+			'clean' => '',
+			'yourl' => ''
+		);
+		$i++;
+	}
+
+	/** #2 собираем урлы из HREF атрибутов. Собираем их отдельно чтобы включить урлы с пробелами */
+	$reg_exUrl = '/href=(\'|\")((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9 \(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9 +\(\)\[\]&@#\/%=~_|])(\'|\")/i';
+	preg_match_all($reg_exUrl, $text, $hrefs);
+
+	$i=0;
+	foreach($hrefs[0] as $url){
+		// очищаем урлы от мусора
+		$url = str_replace('href="', '', $url);
+		$url = str_replace("href='", '', $url);
+		$url = substr_replace($url, "", -1);
+		$cleanUrl = clyc_clean_url($url);
+
+		// меняем в тексте на хэши
+		$hash = '%href_'.$i.'%';
+		$text = str_replace($url, $hash, $text);
+
+		// добавляем элементы в массив
+		$elements[] =  array(
+				'type'  => 'href',
+				'needY'  => FALSE,
+				'elem'  => $url,
+				'hash'  => $hash,
+				'clean' => $cleanUrl,
+				'yourl' => ''
+		);
+		$i++;
+	}
+
+	/** #3 получаем и обрабатываем остальные урлы **/
+	$reg_exUrl = '/(http|ftp|https):\/\/[\w-]+(\.[\w-]+)+([\w.,@?^=%&amp;:\/~+#-]*[\w@?^=%&amp;\/~+#-])/i';
+	preg_match_all($reg_exUrl, $text, $links);
+	$i=0;
+	foreach($links[0] as $url){
+		// if we are updating text onfly - clear framed slashes
+		if ($onfly){
+			$url = stripslashes ($url);
+		}
+
+		// очищаем урлы от мусора
+		$cleanUrl = clyc_clean_url($url);
+
+		// меняем в тексте на хэши
+		$hash = '%url_'.$i.'%';
+		$text = str_replace($url, $hash, $text);
+
+		// добавляем элементы в массив
+		$elements[] =  array(
+				'type'  => 'url',
+				'needY'  => FALSE,
+				'elem'  => $url,
+				'hash'  => $hash,
+				'clean' => $cleanUrl,
+				'yourl' => ''
+		);
+		$i++;
+	}
+
+	/** #4 последний проход **/
+	$reg_exUrl = '/((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9\(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9+\(\)\[\]&@#\/%=~_|])/i';
+	preg_match_all($reg_exUrl, $text, $links);
+
+	$i=0;
+	foreach($links[0] as $url){
+		// if we are updating text onfly - clear framed slashes
+		if ($onfly){
+			$url = stripslashes ($url);
+		}
+		// очищаем урлы от мусора
+		$cleanUrl = clyc_clean_url($url);
+
+		// меняем в тексте на хэши
+		$hash = '%lurl_'.$i.'%';
+		$text = str_replace($url, $hash, $text);
+
+		// добавляем элементы в массив
+		$elements[] =  array(
+				'type'  => 'lurl',
+				'needY'  => FALSE,
+				'elem'  => $url,
+				'hash'  => $hash,
+				'clean' => $cleanUrl,
+				'yourl' => ''
+		);
+		$i++;
+	}
+
+	// получаем список доменов для замены
 	$domains = is_array($options['clyc_domains']) ? $options['clyc_domains'] : explode(',', $options['clyc_domains']);
 
-	if ($options['clyc_shorten_link_types'] == 'all'){
-
-		/** 1 step -- getting URLS from HREF attrs - symbols including  spaces **/
-		// searching links
-		//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
-
-		//if we are updating text onfly - clear framed slashes
-		if ($onfly){
-			$text = stripslashes ($text);
-		}
-
-		$reg_exUrl = '/href=(\'|\")((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9 \(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9 +\(\)\[\]&@#\/%=~_|])(\'|\")/i';
-		preg_match_all($reg_exUrl, $text, $matches);
-		$links = array_unique($matches[0]);
-		//var_dump($links);
-
-		$i=0;
-		$clycable = array(); // array container of urls and their yourls
-		foreach($links as $url){
-			// remove href frames
-			$url = str_replace('href="', '', $url);
-			$url = str_replace("href='", '', $url);
-			$url = substr_replace($url, "", -1);
-
-			// checking founded urls on containing domains from options
+	// отмечаем в массиве элементы, которые нуждаются в yourls-обработке
+	foreach($elements as &$el){
+		// обрабатываем только урлы
+		if ($el['type']  != 'buff'){
 			foreach ($domains as $domain) {
-				$pos = strripos($url, trim_string($domain));
+				$pos = strripos($el['clean'], trim_string($domain));
 				if ($pos !== false) {
-					// if url contains domain - changing it
-					$cleanUrl = clyc_clean_url($url);
-					$clycable[] =  array(
-							'url' => $url,
-							'clean' => $cleanUrl,
-							'yourl' => ''
-					);
-				}
-			}
-			//$link = str_replace($url, "%url-$i%", $link);
-			$i++;
-		}
-		//var_dump($clycable);
-
-		// getting yourls for our urls
-		$shorten_urls = clyc_get_yourls($clycable, $options);
-		//var_dump($shorten_urls);
-
-		// replacing urls
-		foreach ($shorten_urls as $pair){
-			if( ! empty($pair['url']) AND ! empty($pair['yourl'])){
-				while (strripos($text, trim_string($pair['url']))) {
-					$text = str_replace($pair['url'], $pair['yourl'], $text);
+					$el['needY'] = TRUE;
 				}
 			}
 		}
-		//pp($text);
-		//echo '<textarea style="height: 252px;" cols="200" rows="200">';
-		//pp(htmlspecialchars($text));
-		//echo '</textarea>';
-		//echo '<hr>';
+	}
+	$elements = clyc_get_yourls($elements, $options);
 
-		/** 2 step -- getting othres URLS **/
+	//var_dump($elements);
 
-		//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
-		$reg_exUrl2 = '/((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9\(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9+\(\)\[\]&@#\/%=~_|])/i';
+	// в тексте заменяем хэши на исходные урлы или их yourls-аналоги
+	foreach($elements as $el){
 
-		preg_match_all($reg_exUrl2, $text, $matches2);
-		$links2 = array_unique($matches2[0]);
-		//echo '$links2:';
-		//var_dump($links2);
+		// елси элемент из списка преобразуемых - заменяем хэш на yourl
 
-		$i=0;
-		$clycable2 = array(); // array container of urls and their yourls
-		foreach($links2 as $url){
-			// if we are updating text onfly - clear framed slashes
-			if ($onfly){
-				$url = stripslashes ($url);
+		if ($el['needY'] AND $el['yourl'] != '') {
+			while (strripos($text, trim_string($el['hash']))) {
+				$text = str_replace($el['hash'], $el['yourl'], $text);
 			}
-			// remove href frames
-			//$url = str_replace('href="', '', $link);
-			//$url = str_replace("href='", '', $url);
-			//$url = substr_replace($url, "", -1);
-
-			// checking founded urls on containing domains from options
-			foreach ($domains as $domain) {
-				$pos = strripos($url, trim_string($domain));
-				if ($pos !== false) {
-					// if url contains domain - changing it
-					$cleanUrl = clyc_clean_url($url);
-					$clycable2[] =  array(
-							'url' => $url,
-							'clean' => $cleanUrl,
-							'yourl' => ''
-					);
-				}
+		} else {
+			// елси элемент не из списка преобразуемых - заменяем хэш на исходный код элемента
+			while (strripos($text, trim_string($el['hash']))) {
+				$text = str_replace($el['hash'], $el['elem'], $text);
 			}
-			//$link = str_replace($url, "%url-$i%", $link);
-			$i++;
-		}
-		//echo '$clycable2:';
-		//var_dump($clycable2);
-
-		// getting yourls for our urls
-		$shorten_urls2 = clyc_get_yourls($clycable2, $options);
-		//var_dump($shorten_urls2);
-
-		foreach ($shorten_urls2 as $pair){
-			if( ! empty($pair['url']) AND ! empty($pair['yourl'])){
-				while (strripos($text, trim_string($pair['url']))) {
-					$text = str_replace($pair['url'], $pair['yourl'], $text);
-				}
-			}
-		}
-
-		//pp($text2);
-		//echo '<textarea style="height: 252px;" cols="200" rows="200">';
-		//pp(htmlspecialchars($text2));
-		//echo '</textarea>';
-	} else {
-		$clycable = array(); // array container of urls and their yourls
-		$new_links = array(); // array of final links
-
-		// getting <a> links from text
-		$reg_exUrl = "/<a ([\r\n\w+\W+].*?)>([\r\n\w+\W+].*?)<\/a>/i";
-		preg_match_all($reg_exUrl, $text, $matches);
-		$links = array_unique($matches[0]);
-
-		// updating links
-		foreach($links as $url){
-			// if we are updating text onfly - clear framed slashes
-			if ($onfly){
-				$url = stripslashes ($url);
-			}
-
-			// getting from link text from href-param
-			preg_match("/href=(\"|')[^\"\']+(\"|')/i", $url, $result);
-			if ( ! empty($result[0])){
-				$url = str_replace("href='", "", $result[0]);
-				$url = str_replace('href="', "", $url);
-				$url = substr_replace($url, "", -1);
-			}
-
-			// clearing url
-			$cleanUrl = clyc_clean_url($url);
-			$clycable[] =  array(
-					'url' => $url,
-					'clean' => $cleanUrl,
-					'yourl' => ''
-			);
-		}
-		// getting yourls for our urls
-		$shorten_urls = clyc_get_yourls($clycable, $options);
-		//var_dump($links);
-		//var_dump($shorten_urls);
-
-		// replacing inside links url to yourls
-		foreach($links as $anchor){
-
-			foreach ($shorten_urls as $pair){
-				$pos = strripos(trim_string($anchor),$pair['url']);
-				// if anchor contains url
-				if ($pos !== false) {
-					if ($options['clyc_shorten_link_types'] == 'hrefs') {
-						// replace only href url
-						if ($onfly){
-							$anchor = stripslashes ($anchor);
-						}
-
-						$link = str_replace("href='".$pair['url'], "href='".$pair['yourl'], $anchor);
-						$link = str_replace('href="'.$pair['url'], 'href="'.$pair['yourl'], $link);
-						$link = str_replace("href=".$pair['url'], "href=".$pair['yourl'], $link);
-					} else {
-						// replace href and text of anchor
-						$link = str_replace($pair['url'], $pair['yourl'], $anchor);
-					}
-					//getting array of new anchors
-					$new_links[] = $link;
-				}
-			}
-		}
-		//var_dump($new_links);
-		// replacing old anchors to new
-		for($i=0; $i<count($new_links); $i++){
-			$text = str_replace($links[$i], $new_links[$i], $text);
 		}
 	}
 	return $text;
 }
 
 /**
- * Shorten array of links with YOURLS API
- * trying to send multiple links with bulkshortener
- * if not - shorten every link one by one
+ * сокращает массив ссылок с помощью YOURLS API
+ * пробует сократить массив ссылок через yourls-плагин bulkshortener
+ * если нет - сокращает ссылки поодиночке
  *
- * TODO доработать под каждый вид замены ссылок
- * TODO привести в порядок оформление
- * @param $clycable - array of links
- * @param $options
- * @return mixed
+ * @param $elements - составной массив оббрабатываемых ссылок
+ * @param $options - настройки WP
+ * @return $elements - массив с сокращёнными ссылками
  */
 
-function clyc_get_yourls($clycable, $options) {
-	// trying to send multiple links with bulkshortener
-	//building url with params
+function clyc_get_yourls($elements, $options) {
 	$urls = array();
-	foreach($clycable as $row){
-		$urls[] = $row['clean'];
+	$tmpUrls = array();
+	// формируем темповый массив урлов
+	foreach ($elements as $el){
+		if ($el['needY']){
+			$tmpUrls[] = $el['clean'];
+		}
 	}
+	$tmpUrls = array_unique($tmpUrls);
+	foreach($tmpUrls as $tu){
+		$urls[] = $tu;
+	}
+
+	// формируем параметры для отправки в bulkshortener
 	$params = array(
 			'action'   => 'bulkshortener',
 			'signature' => $options['clyc_yourls_token'],
 			'urls' => $urls
 	);
+	// фоормируем урл для отправки
 	$url = $options['clyc_yourls_domain'].'/yourls-api.php' . '?' . http_build_query($params);
-	//echo '$url:'.$url;
-	// Init the CURL session
+
+	// Инициируем CURL
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_HEADER, 0);            // No header in the result
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return, do not echo result
-
+	curl_setopt($ch, CURLOPT_HEADER, 0);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	// отправка
 	$data['content'] = curl_exec($ch);
 	$headers = curl_getinfo($ch, CURLINFO_HEADER_OUT); // Заголовки запроса получаем только так http://php.net/manual/ru/function.curl-getinfo.php
 	$data['requestHeaders'] = $headers;
@@ -317,23 +298,39 @@ function clyc_get_yourls($clycable, $options) {
 	$data['httpCode'] = $info['http_code'];
 	curl_close($ch);
 
-	// if bulkshortener installed on server and server back links - return them
+	// если на сервере установлен bulkshortener
+	// и мы получаем успешный ответ со строкой ссылорк - обрабатываем их.
 	if ($data['httpCode'] != 400){
-		//echo '<br> USE bulkshortener';
 		$data = explode("\n", trim_string($data['content']));
-		$i=0;
+
+		// составляем массив пар  урлов и их yourl-аналогов
+		$i=0; $pairs = array();
 		foreach($data as $row){
-			$clycable[$i]['yourl'] =  $row;
+			$pairs[$i]['url'] = $urls[$i];
+			$pairs[$i]['yourl'] = $row;
 			$i++;
 		}
+
+			// подставляем в $elements соответствующие урлам yourls-аналоги
+		foreach ($elements as &$el){
+			if ($el['needY']){
+				foreach($pairs as $pair){
+					if ($el['clean'] == $pair['url']){
+						$el['yourl'] = $pair['yourl'];
+					}
+				}
+			}
+		}
 	} else {
-		//echo '<br> DO NOT USE bulkshortener';
-		// if bulkshortener is not installed - shorten every link by one call
-		foreach($clycable as &$row){
-			$row['yourl'] =  clyc_shortify_url($row['clean'], $options);
+		// обработка ссылко без bulkshortener
+		foreach($elements as &$el) {
+			if ($el['needY']) {
+				$el['yourl'] = clyc_shortify_url($el['clean'], $options);
+			}
 		}
 	}
-	return $clycable;
+
+	return $elements ;
 }
 /**
  * getting new YOURL for url link

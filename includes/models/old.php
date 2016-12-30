@@ -249,3 +249,244 @@ function clyc_save_post($post_id, $post_content) {
 	}
 	return TRUE;
 }
+
+//function my_mce_buttons_2( $buttons ) {
+//	/**
+//	 * Add in a core button that's disabled by default
+//	 */
+//
+//	//$buttons[] = 'superscript';
+//	//$buttons[] = 'subscript';
+//	return $buttons;
+//}
+//add_filter( 'mce_buttons_2', 'my_mce_buttons_2' );
+
+//function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
+//	//echo '<textarea style="height: 252px;" cols="200" rows="200">';
+//	//pp(stripslashes($text));
+//	//echo '</textarea>';
+//	// getting domains
+//	$domains = is_array($options['clyc_domains']) ? $options['clyc_domains'] : explode(',', $options['clyc_domains']);
+//
+//	if ($options['clyc_shorten_link_types'] == 'all'){
+//
+//		/** 1 step -- getting URLS from HREF attrs - symbols including  spaces **/
+//		// searching links
+//		//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
+//
+//		//if we are updating text onfly - clear framed slashes
+//		if ($onfly){
+//			$text = stripslashes ($text);
+//		}
+//
+//		$reg_exUrl = '/href=(\'|\")((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9 \(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9 +\(\)\[\]&@#\/%=~_|])(\'|\")/i';
+//		preg_match_all($reg_exUrl, $text, $matches);
+//		$links = array_unique($matches[0]);
+//		//var_dump($links);
+//
+//		$i=0;
+//		$clycable = array(); // array container of urls and their yourls
+//		foreach($links as $url){
+//			// remove href frames
+//			$url = str_replace('href="', '', $url);
+//			$url = str_replace("href='", '', $url);
+//			$url = substr_replace($url, "", -1);
+//
+//			// checking founded urls on containing domains from options
+//			foreach ($domains as $domain) {
+//				$pos = strripos($url, trim_string($domain));
+//				if ($pos !== false) {
+//					// if url contains domain - changing it
+//					$cleanUrl = clyc_clean_url($url);
+//					$clycable[] =  array(
+//							'url' => $url,
+//							'clean' => $cleanUrl,
+//							'yourl' => ''
+//					);
+//				}
+//			}
+//			//$link = str_replace($url, "%url-$i%", $link);
+//			$i++;
+//		}
+//		//var_dump($clycable);
+//
+//		// getting yourls for our urls
+//		$shorten_urls = clyc_get_yourls($clycable, $options);
+//		//var_dump($shorten_urls);
+//
+//		// replacing urls
+//		foreach ($shorten_urls as $pair){
+//			if( ! empty($pair['url']) AND ! empty($pair['yourl'])){
+//				while (strripos($text, trim_string($pair['url']))) {
+//					$text = str_replace($pair['url'], $pair['yourl'], $text);
+//				}
+//			}
+//		}
+//		//pp($text);
+//		//echo '<textarea style="height: 252px;" cols="200" rows="200">';
+//		//pp(htmlspecialchars($text));
+//		//echo '</textarea>';
+//		//echo '<hr>';
+//
+//		/** 2 step -- getting othres URLS **/
+//
+//		//$reg_exUrl = "/([\w]+:\/\/[\w-?&;#\(\)\[\]~=\.\/\@]+[\w\/])/i";
+//		$reg_exUrl2 = '/((((https?|ftp|file):\/\/)|(www.))[-A-Z0-9\(\)\[\]+&@#\/%?=~_|!:,.;]*[-A-Z0-9+\(\)\[\]&@#\/%=~_|])/i';
+//
+//		preg_match_all($reg_exUrl2, $text, $matches2);
+//		$links2 = array_unique($matches2[0]);
+//		//echo '$links2:';
+//		//var_dump($links2);
+//
+//		$i=0;
+//		$clycable2 = array(); // array container of urls and their yourls
+//		foreach($links2 as $url){
+//			// if we are updating text onfly - clear framed slashes
+//			if ($onfly){
+//				$url = stripslashes ($url);
+//			}
+//			// remove href frames
+//			//$url = str_replace('href="', '', $link);
+//			//$url = str_replace("href='", '', $url);
+//			//$url = substr_replace($url, "", -1);
+//
+//			// checking founded urls on containing domains from options
+//			foreach ($domains as $domain) {
+//				$pos = strripos($url, trim_string($domain));
+//				if ($pos !== false) {
+//					// if url contains domain - changing it
+//					$cleanUrl = clyc_clean_url($url);
+//					$clycable2[] =  array(
+//							'url' => $url,
+//							'clean' => $cleanUrl,
+//							'yourl' => ''
+//					);
+//				}
+//			}
+//			//$link = str_replace($url, "%url-$i%", $link);
+//			$i++;
+//		}
+//		//echo '$clycable2:';
+//		//var_dump($clycable2);
+//
+//		// getting yourls for our urls
+//		$shorten_urls2 = clyc_get_yourls($clycable2, $options);
+//		//var_dump($shorten_urls2);
+//
+//		foreach ($shorten_urls2 as $pair){
+//			if( ! empty($pair['url']) AND ! empty($pair['yourl'])){
+//				while (strripos($text, trim_string($pair['url']))) {
+//					$text = str_replace($pair['url'], $pair['yourl'], $text);
+//				}
+//			}
+//		}
+//
+//		//pp($text2);
+//		//echo '<textarea style="height: 252px;" cols="200" rows="200">';
+//		//pp(htmlspecialchars($text2));
+//		//echo '</textarea>';
+//	} else {
+//		$clycable = array(); // array container of urls and their yourls
+//		$new_links = array(); // array of final links
+//
+//		// getting <a> links from text
+//		$reg_exUrl = "/<a ([\r\n\w+\W+].*?)>([\r\n\w+\W+].*?)<\/a>/i";
+//		preg_match_all($reg_exUrl, $text, $matches);
+//		$links = array_unique($matches[0]);
+//
+//		// updating links
+//		foreach($links as $url){
+//			// if we are updating text onfly - clear framed slashes
+//			if ($onfly){
+//				$url = stripslashes ($url);
+//			}
+//
+//			// getting from link text from href-param
+//			preg_match("/href=(\"|')[^\"\']+(\"|')/i", $url, $result);
+//			if ( ! empty($result[0])){
+//				$url = str_replace("href='", "", $result[0]);
+//				$url = str_replace('href="', "", $url);
+//				$url = substr_replace($url, "", -1);
+//			}
+//
+//			// clearing url
+//			$cleanUrl = clyc_clean_url($url);
+//			$clycable[] =  array(
+//					'url' => $url,
+//					'clean' => $cleanUrl,
+//					'yourl' => ''
+//			);
+//		}
+//		// getting yourls for our urls
+//		$shorten_urls = clyc_get_yourls($clycable, $options);
+//		//var_dump($links);
+//		//var_dump($shorten_urls);
+//
+//		// replacing inside links url to yourls
+//		foreach($links as $anchor){
+//
+//			foreach ($shorten_urls as $pair){
+//				$pos = strripos(trim_string($anchor),$pair['url']);
+//				// if anchor contains url
+//				if ($pos !== false) {
+//					if ($options['clyc_shorten_link_types'] == 'hrefs') {
+//						// replace only href url
+//						if ($onfly){
+//							$anchor = stripslashes ($anchor);
+//						}
+//
+//						$link = str_replace("href='".$pair['url'], "href='".$pair['yourl'], $anchor);
+//						$link = str_replace('href="'.$pair['url'], 'href="'.$pair['yourl'], $link);
+//						$link = str_replace("href=".$pair['url'], "href=".$pair['yourl'], $link);
+//					} else {
+//						// replace href and text of anchor
+//						$link = str_replace($pair['url'], $pair['yourl'], $anchor);
+//					}
+//					//getting array of new anchors
+//					$new_links[] = $link;
+//				}
+//			}
+//		}
+//		//var_dump($new_links);
+//		// replacing old anchors to new
+//		for($i=0; $i<count($new_links); $i++){
+//			$text = str_replace($links[$i], $new_links[$i], $text);
+//		}
+//	}
+//	return $text;
+//}
+/**TODO:
+ * ссылки внутри href d <a>
+ * ссылки в тексте , какс протоколом так и просто упоминания из списка
+ * bbcode-ссылки [url=https://ru.wikipedia.org]wikipedia[/url]
+ * bbcode-ссылки [url]https://ru.wikipedia.org[/url]
+ */
+//echo '<textarea style="height: 252px;" cols="200" rows="200">';
+//pp(stripslashes($text));
+//echo '</textarea>';
+// getting domains
+
+
+
+
+$text = '
+[url=https://ru.wikipedia.org][img]https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png[/img][/url]
+[url]https://ru.wikipedia.org[/url]
+[URL]https://BIG.wikipedia.org[/URL]
+[url=https://ru.wikipedia.org]wikipedia[/url]
+<a href="https://waak.net/im60ahdbeluq.html">https://www.turbobit.net/im60ahdbeluq.html</a>
+<a href="http://waak.net/im60ahdbeluq.html">ссылка</a>
+<iframe src="https://iframe.co/embed/4Fe5bnUaARE/25343tergdfvcx_32.wmv" ></iframe>
+<img src="https://image.co/embed/4Fe5bnUaARE/25343tergdfvcx_32.png" class=\'dd\'/>
+
+[IMG]https://wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png[/IMG]
+foo@demo.net	bar.ba@test.co.uk www.demo.com	http://foo.co.uk/
+Добро пожаловать в http://linux.net/ WordPress.<br>Это
+Отредактируйте или удалите <a href="http://www.yandex.ru/">http://yandex.ru/</a>её, затем
+https://raka.rak пишите! <a href="www.example.com/hello.html?ho#t-t_hy">www.example.com/hello.html?ho#t-t_hy</a>
+<a href="http://waper.ru">http://waper.ru</a><img src="http://waka.img/embed/4Fe5bnUaARE/25343tergdfvcx_32.png" class="sss"/>
+<a rel="external noopener noreferrer" target="_blank" data-wpel-link="external" href="http://www.datafile.com/d/TWpBeU16VTBNalEF9/Pregnantmary 11.mp4">Pregnantmary 11.mp4</a>';
+
+var_dump($text);
+$ntext = clyc_shortyfy_urls($text, $options);
+var_dump($ntext);
