@@ -159,27 +159,27 @@ $clyc_installed = get_option('clyc_installed');
 						</tr>
 						<!-- показываем доп настройки только после установки свойст YOURLS -->
 						<?php if ($clyc_installed == 1): ?>
-							<tr>
+						<!--	<tr>
 								<td>
 									Shorten links "on fly"
 								</td>
 								<td>
-									<input name="clyc_create_on_fly" type="checkbox" <?=($options['clyc_create_on_fly'] == 1) ? 'checked' : '';?> />
+									<input name="clyc_create_on_fly" type="checkbox" <?/*=($options['clyc_create_on_fly'] == 1) ? 'checked' : '';*/?> />
 								</td>
 							</tr>
 							<tr>
 								<td colspan="2"><br></td>
-							</tr>
-							<tr>
-								<td>
-									Shorten link types
-								</td>
-								<td>
-									<input type="radio" name="clyc_shorten_link_types"  <?=($options['clyc_shorten_link_types'] == 'all') ? 'checked' : '';?> value="all"> All urls <div class="clyc_form_note">(both text urls and urls inside &lt;a&gt; tags)</div><br>
-									<input type="radio" name="clyc_shorten_link_types" <?=($options['clyc_shorten_link_types'] == 'aurls') ? 'checked' : '';?> value="aurls"> Only in links <div class="clyc_form_note">(urls inside &lt;a&gt; tags)</div><br/>
-									<input type="radio" name="clyc_shorten_link_types" <?=($options['clyc_shorten_link_types'] == 'hrefs') ? 'checked' : '';?> value="hrefs"> Only hrefs <div class="clyc_form_note">(only urls inside links' href attribute &lt;a href='..'&gt; )</div>
-								</td>
-							</tr>
+							</tr>-->
+							<!--<tr>-->
+							<!--	<td>-->
+							<!--		Shorten link types-->
+							<!--	</td>-->
+							<!--	<td>-->
+							<!--		<input type="radio" name="clyc_shorten_link_types"  --><?//=($options['clyc_shorten_link_types'] == 'all') ? 'checked' : '';?><!-- value="all"> All urls <div class="clyc_form_note">(both text urls and urls inside &lt;a&gt; tags)</div><br>-->
+							<!--		<input type="radio" name="clyc_shorten_link_types" --><?//=($options['clyc_shorten_link_types'] == 'aurls') ? 'checked' : '';?><!-- value="aurls"> Only in links <div class="clyc_form_note">(urls inside &lt;a&gt; tags)</div><br/>-->
+							<!--		<input type="radio" name="clyc_shorten_link_types" --><?//=($options['clyc_shorten_link_types'] == 'hrefs') ? 'checked' : '';?><!-- value="hrefs"> Only hrefs <div class="clyc_form_note">(only urls inside links' href attribute &lt;a href='..'&gt; )</div>-->
+							<!--	</td>-->
+							<!--</tr>-->
 							<tr>
 								<td colspan="2">
 									&nbsp;

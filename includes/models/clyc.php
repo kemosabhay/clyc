@@ -43,34 +43,32 @@ function clyc_save_options($post){
 	global $wpdb;
 	$table = clyc_get_table();
 	// обрабатываем пустоту полей
-	if (isset($post['clyc_create_on_fly']) AND ($post['clyc_create_on_fly'] == 'on' OR $post['clyc_create_on_fly'] == 1)){
-		$post['clyc_create_on_fly'] =  1;
-	} else {
-		$post['clyc_create_on_fly'] =  0;
-	}
+	//if (isset($post['clyc_create_on_fly']) AND ($post['clyc_create_on_fly'] == 'on' OR $post['clyc_create_on_fly'] == 1)){
+	//	$post['clyc_create_on_fly'] =  1;
+	//} else {
+	//	$post['clyc_create_on_fly'] =  0;
+	//}
+	//$post['clyc_shorten_link_types'] = isset($post['clyc_shorten_link_types']) ? trim_string($post['clyc_shorten_link_types']) : 'all';
+
 	$post['clyc_domains'] = isset($post['clyc_domains']) ? trim_string($post['clyc_domains']) : NULL;
-	$post['clyc_shorten_link_types'] = isset($post['clyc_shorten_link_types']) ? trim_string($post['clyc_shorten_link_types']) : 'all';
+
+	$post['clyc_create_on_fly'] =  1;
+	$post['clyc_shorten_link_types'] = 'all';
 
 	$sql = "UPDATE $table SET clyc_yourls_domain='%s', clyc_yourls_token='%s', clyc_create_on_fly='%s', clyc_domains='%s', clyc_shorten_link_types='%s' WHERE id = 1";
 	$query = $wpdb->prepare($sql, $post['clyc_yourls_domain'], $post['clyc_yourls_token'], $post['clyc_create_on_fly'], $post['clyc_domains'], $post['clyc_shorten_link_types']);
 	//pp($query);
 	$result = $wpdb->query($query);
 
-	if($result === false) {
+	if ($result === false) {
 		return '<span class="error">Settings saving error!</span>';
 	}
-
 	return '<span class="success">Settings successfully changed!</span>';
 }
-
 
 /**
  * Getting anchors in text, based on domains list from options,
  * replacing urls with yourls
- * if clyc_shorten_link_types = 'all' - replace all of urls in text
- * clyc_shorten_link_types = 'hrefs' - replace only urls inside href-param
- * clyc_shorten_link_types = 'aurls' - replace urls in anchors: both inside href and text of anchor
- * TODO: DRY
  *
  * @param $text - text to update
  * @param $options - array of options
@@ -215,13 +213,14 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 
 	// получаем список доменов для замены
 	$domains = is_array($options['clyc_domains']) ? $options['clyc_domains'] : explode(',', $options['clyc_domains']);
-
 	// отмечаем в массиве элементы, которые нуждаются в yourls-обработке
 	foreach($elements as &$el){
 		// обрабатываем только урлы
 		if ($el['type']  != 'buff'){
 			foreach ($domains as $domain) {
-				$pos = strripos($el['clean'], trim_string($domain));
+				//TODO при реальной обработке не определяются домену в ссылках
+				$pos = strripos($el['elem'], trim_string(stripslashes($domain)));
+				//echo '<br> $domain:'.$domain.' $el[elem]:'.$el['elem'].' pos'.$pos;
 				if ($pos !== false) {
 					$el['needY'] = TRUE;
 				}
@@ -229,22 +228,16 @@ function clyc_shortyfy_urls($text, $options, $onfly = FALSE){
 		}
 	}
 	$elements = clyc_get_yourls($elements, $options);
-
-	//var_dump($elements);
-
-	// в тексте заменяем хэши на исходные урлы или их yourls-аналоги
-	foreach($elements as $el){
-
+	for($i=0; $i < count($elements); $i++){
 		// елси элемент из списка преобразуемых - заменяем хэш на yourl
-
-		if ($el['needY'] AND $el['yourl'] != '') {
-			while (strripos($text, trim_string($el['hash']))) {
-				$text = str_replace($el['hash'], $el['yourl'], $text);
+		if ($elements[$i]['needY'] AND $elements[$i]['yourl'] != '') {
+			while (strripos($text, trim_string($elements[$i]['hash']))) {
+				$text = str_replace($elements[$i]['hash'], $elements[$i]['yourl'], $text);
 			}
 		} else {
 			// елси элемент не из списка преобразуемых - заменяем хэш на исходный код элемента
-			while (strripos($text, trim_string($el['hash']))) {
-				$text = str_replace($el['hash'], $el['elem'], $text);
+			while (strripos($text, trim_string($elements[$i]['hash']))) {
+				$text = str_replace($elements[$i]['hash'], $elements[$i]['elem'], $text);
 			}
 		}
 	}
@@ -283,6 +276,7 @@ function clyc_get_yourls($elements, $options) {
 	);
 	// фоормируем урл для отправки
 	$url = $options['clyc_yourls_domain'].'/yourls-api.php' . '?' . http_build_query($params);
+	//echo '$url '.$url;
 
 	// Инициируем CURL
 	$ch = curl_init();
@@ -302,21 +296,23 @@ function clyc_get_yourls($elements, $options) {
 	// и мы получаем успешный ответ со строкой ссылорк - обрабатываем их.
 	if ($data['httpCode'] != 400){
 		$data = explode("\n", trim_string($data['content']));
-
-		// составляем массив пар  урлов и их yourl-аналогов
-		$i=0; $pairs = array();
-		foreach($data as $row){
-			$pairs[$i]['url'] = $urls[$i];
-			$pairs[$i]['yourl'] = $row;
-			$i++;
-		}
-
+		if (count($data) > 0 ) {
+			// составляем массив пар  урлов и их yourl-аналогов
+			$i=0; $pairs = array();
+			foreach($data as $row){
+				$pairs[$i] = array(
+					'url' => (! empty($urls[$i])) ? $urls[$i] : '',
+					'yourl' => $row
+				);
+				$i++;
+			}
 			// подставляем в $elements соответствующие урлам yourls-аналоги
-		foreach ($elements as &$el){
-			if ($el['needY']){
-				foreach($pairs as $pair){
-					if ($el['clean'] == $pair['url']){
-						$el['yourl'] = $pair['yourl'];
+			foreach ($elements as &$el){
+				if ($el['needY']){
+					foreach($pairs as $pair){
+						if ($el['clean'] == $pair['url']){
+							$el['yourl'] = $pair['yourl'];
+						}
 					}
 				}
 			}
@@ -329,7 +325,6 @@ function clyc_get_yourls($elements, $options) {
 			}
 		}
 	}
-
 	return $elements ;
 }
 /**

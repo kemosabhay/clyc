@@ -466,6 +466,20 @@ function clyc_save_post($post_id, $post_content) {
 //echo '</textarea>';
 // getting domains
 
+// в тексте заменяем хэши на исходные урлы или их yourls-аналоги
+//foreach($elements as $el){
+//	// елси элемент из списка преобразуемых - заменяем хэш на yourl
+//	if ($el['needY'] AND $el['yourl'] != '') {
+//		while (strripos($text, trim_string($el['hash']))) {
+//			$text = str_replace($el['hash'], $el['yourl'], $text);
+//		}
+//	} else {
+//		// елси элемент не из списка преобразуемых - заменяем хэш на исходный код элемента
+//		while (strripos($text, trim_string($el['hash']))) {
+//			$text = str_replace($el['hash'], $el['elem'], $text);
+//		}
+//	}
+//}
 
 
 
@@ -478,15 +492,15 @@ $text = '
 <a href="http://waak.net/im60ahdbeluq.html">ссылка</a>
 <iframe src="https://iframe.co/embed/4Fe5bnUaARE/25343tergdfvcx_32.wmv" ></iframe>
 <img src="https://image.co/embed/4Fe5bnUaARE/25343tergdfvcx_32.png" class=\'dd\'/>
-
 [IMG]https://wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png[/IMG]
 foo@demo.net	bar.ba@test.co.uk www.demo.com	http://foo.co.uk/
 Добро пожаловать в http://linux.net/ WordPress.<br>Это
-Отредактируйте или удалите <a href="http://www.yandex.ru/">http://yandex.ru/</a>её, затем
+Отредактируйте или удалите <a href="http://www.yandex.ru/">http://yandex.ru/</a> её, затем
 https://raka.rak пишите! <a href="www.example.com/hello.html?ho#t-t_hy">www.example.com/hello.html?ho#t-t_hy</a>
 <a href="http://waper.ru">http://waper.ru</a><img src="http://waka.img/embed/4Fe5bnUaARE/25343tergdfvcx_32.png" class="sss"/>
 <a rel="external noopener noreferrer" target="_blank" data-wpel-link="external" href="http://www.datafile.com/d/TWpBeU16VTBNalEF9/Pregnantmary 11.mp4">Pregnantmary 11.mp4</a>';
 
-var_dump($text);
+pp($text);
+
 $ntext = clyc_shortyfy_urls($text, $options);
-var_dump($ntext);
+pp($ntext);
